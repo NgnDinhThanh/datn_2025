@@ -1,0 +1,360 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="840fbaef-aec4-446e-a82b-f0eb3d15ba86" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/.gitignore" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/bubblesheet_backend.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/bubblesheet_backend.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/dataSources.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/answer_keys/views.py" beforeDir="false" afterPath="$PROJECT_DIR$/answer_keys/views.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_backend/settings.py" beforeDir="false" afterPath="$PROJECT_DIR$/bubblesheet_backend/settings.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/.gitignore" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/.metadata" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/README.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/analysis_options.yaml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/android/.gitignore" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/android/app/build.gradle.kts" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/android/app/src/debug/AndroidManifest.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/android/app/src/main/AndroidManifest.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/android/app/src/main/kotlin/com/example/bubbleshee_frontend/MainActivity.kt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/android/app/src/main/res/drawable-v21/launch_background.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/android/app/src/main/res/drawable/launch_background.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/android/app/src/main/res/mipmap-hdpi/ic_launcher.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/android/app/src/main/res/mipmap-mdpi/ic_launcher.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/android/app/src/main/res/mipmap-xhdpi/ic_launcher.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/android/app/src/main/res/mipmap-xxhdpi/ic_launcher.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/android/app/src/main/res/values-night/styles.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/android/app/src/main/res/values/styles.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/android/app/src/profile/AndroidManifest.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/android/build.gradle.kts" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/android/gradle.properties" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/android/gradle/wrapper/gradle-wrapper.properties" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/android/settings.gradle.kts" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/ios/.gitignore" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/ios/Flutter/AppFrameworkInfo.plist" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/ios/Flutter/Debug.xcconfig" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/ios/Flutter/Release.xcconfig" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/ios/Runner.xcodeproj/project.pbxproj" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/ios/Runner.xcodeproj/project.xcworkspace/contents.xcworkspacedata" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/ios/Runner.xcodeproj/project.xcworkspace/xcshareddata/IDEWorkspaceChecks.plist" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/ios/Runner.xcodeproj/project.xcworkspace/xcshareddata/WorkspaceSettings.xcsettings" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/ios/Runner.xcodeproj/xcshareddata/xcschemes/Runner.xcscheme" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/ios/Runner.xcworkspace/contents.xcworkspacedata" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/ios/Runner.xcworkspace/xcshareddata/IDEWorkspaceChecks.plist" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/ios/Runner.xcworkspace/xcshareddata/WorkspaceSettings.xcsettings" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/ios/Runner/AppDelegate.swift" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/ios/Runner/Assets.xcassets/AppIcon.appiconset/Contents.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-1024x1024@1x.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-20x20@1x.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-20x20@2x.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-20x20@3x.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-29x29@1x.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-29x29@2x.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-29x29@3x.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-40x40@1x.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-40x40@2x.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-40x40@3x.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-60x60@2x.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-60x60@3x.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-76x76@1x.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-76x76@2x.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-83.5x83.5@2x.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/ios/Runner/Assets.xcassets/LaunchImage.imageset/Contents.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/ios/Runner/Assets.xcassets/LaunchImage.imageset/LaunchImage.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/ios/Runner/Assets.xcassets/LaunchImage.imageset/LaunchImage@2x.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/ios/Runner/Assets.xcassets/LaunchImage.imageset/LaunchImage@3x.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/ios/Runner/Assets.xcassets/LaunchImage.imageset/README.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/ios/Runner/Base.lproj/LaunchScreen.storyboard" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/ios/Runner/Base.lproj/Main.storyboard" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/ios/Runner/Info.plist" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/ios/Runner/Runner-Bridging-Header.h" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/ios/RunnerTests/RunnerTests.swift" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/lib/classes_entry.dart" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/lib/login_entry.dart" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/lib/main.dart" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/lib/main_web.dart" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/lib/mobile/class_detail_screen.dart" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/lib/mobile/class_form_dialog.dart" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/lib/mobile/class_list_screen.dart" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/lib/mobile/classes_screen.dart" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/lib/mobile/login_screen.dart" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/lib/mobile/main_screen.dart" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/lib/mobile/my_account_screen.dart" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/lib/mobile/quiz_detail_screen.dart" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/lib/mobile/quiz_form_dialog.dart" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/lib/mobile/quizz_screen.dart" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/lib/mobile/register_screen.dart" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/lib/mobile/student_detail_screen.dart" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/lib/mobile/student_form_dialog.dart" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/lib/mobile/students_screen.dart" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/lib/models/answer_key_model.dart" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/lib/models/answer_sheet_model.dart" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/lib/models/class_model.dart" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/lib/models/exam_model.dart" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/lib/models/student_model.dart" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/lib/models/user_model.dart" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/lib/my_account_entry.dart" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/lib/navigation.dart" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/lib/providers/answer_key_provider.dart" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/lib/providers/answer_sheet_form_provider.dart" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/lib/providers/answer_sheet_provider.dart" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/lib/providers/auth_provider.dart" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/lib/providers/class_provider.dart" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/lib/providers/exam_provider.dart" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/lib/providers/student_provider.dart" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/lib/quizzes_entry.dart" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/lib/router.dart" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/lib/screens/answer_sheets/answer_sheet_form_count_screen.dart" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/lib/screens/answer_sheets/answer_sheet_form_header_screen.dart" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/lib/screens/answer_sheets/answer_sheet_form_name_screen.dart" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/lib/screens/answer_sheets/answer_sheet_form_preview_screen.dart" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/lib/screens/answer_sheets/answer_sheet_form_question_screen.dart" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/lib/screens/answer_sheets/answer_sheet_list_screen.dart" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/lib/screens/auth/login_screen.dart" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/lib/screens/auth/register_screen.dart" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/lib/screens/classes/class_add_screen.dart" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/lib/screens/classes/class_detail_screen.dart" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/lib/screens/classes/class_edit_screen.dart" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/lib/screens/classes/class_edit_students_screen.dart" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/lib/screens/classes/class_list_screen.dart" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/lib/screens/main_layout.dart" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/lib/screens/quizzes/quiz_detail_screen.dart" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/lib/screens/quizzes/quiz_edit_answer_key_screen.dart" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/lib/screens/quizzes/quiz_form_screen.dart" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/lib/screens/quizzes/quizz_list_screen.dart" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/lib/screens/students/student_detail_screen.dart" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/lib/screens/students/student_form_screen.dart" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/lib/screens/students/student_import_screen.dart" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/lib/screens/students/student_list_screen.dart" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/lib/screens/students/student_list_screen_mobile.dart" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/lib/screens/users/user_screen.dart" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/lib/services/answer_key_service.dart" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/lib/services/answer_sheet_service.dart" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/lib/services/api_service.dart" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/lib/services/class_service.dart" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/lib/services/exam_service.dart" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/lib/services/student_service.dart" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/lib/students_entry.dart" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/linux/.gitignore" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/linux/CMakeLists.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/linux/flutter/CMakeLists.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/linux/flutter/generated_plugin_registrant.cc" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/linux/flutter/generated_plugin_registrant.h" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/linux/flutter/generated_plugins.cmake" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/linux/runner/CMakeLists.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/linux/runner/main.cc" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/linux/runner/my_application.cc" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/linux/runner/my_application.h" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/macos/.gitignore" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/macos/Flutter/Flutter-Debug.xcconfig" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/macos/Flutter/Flutter-Release.xcconfig" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/macos/Flutter/GeneratedPluginRegistrant.swift" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/macos/Runner.xcodeproj/project.pbxproj" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/macos/Runner.xcodeproj/project.xcworkspace/xcshareddata/IDEWorkspaceChecks.plist" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/macos/Runner.xcodeproj/xcshareddata/xcschemes/Runner.xcscheme" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/macos/Runner.xcworkspace/contents.xcworkspacedata" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/macos/Runner.xcworkspace/xcshareddata/IDEWorkspaceChecks.plist" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/macos/Runner/AppDelegate.swift" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/macos/Runner/Assets.xcassets/AppIcon.appiconset/Contents.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/macos/Runner/Assets.xcassets/AppIcon.appiconset/app_icon_1024.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/macos/Runner/Assets.xcassets/AppIcon.appiconset/app_icon_128.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/macos/Runner/Assets.xcassets/AppIcon.appiconset/app_icon_16.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/macos/Runner/Assets.xcassets/AppIcon.appiconset/app_icon_256.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/macos/Runner/Assets.xcassets/AppIcon.appiconset/app_icon_32.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/macos/Runner/Assets.xcassets/AppIcon.appiconset/app_icon_512.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/macos/Runner/Assets.xcassets/AppIcon.appiconset/app_icon_64.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/macos/Runner/Base.lproj/MainMenu.xib" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/macos/Runner/Configs/AppInfo.xcconfig" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/macos/Runner/Configs/Debug.xcconfig" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/macos/Runner/Configs/Release.xcconfig" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/macos/Runner/Configs/Warnings.xcconfig" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/macos/Runner/DebugProfile.entitlements" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/macos/Runner/Info.plist" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/macos/Runner/MainFlutterWindow.swift" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/macos/Runner/Release.entitlements" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/macos/RunnerTests/RunnerTests.swift" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/pubspec.lock" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/pubspec.yaml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/test/widget_test.dart" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/web/favicon.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/web/icons/Icon-192.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/web/icons/Icon-512.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/web/icons/Icon-maskable-192.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/web/icons/Icon-maskable-512.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/web/index.html" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/web/manifest.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/windows/.gitignore" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/windows/CMakeLists.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/windows/flutter/CMakeLists.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/windows/flutter/generated_plugin_registrant.cc" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/windows/flutter/generated_plugin_registrant.h" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/windows/flutter/generated_plugins.cmake" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/windows/runner/CMakeLists.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/windows/runner/Runner.rc" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/windows/runner/flutter_window.cpp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/windows/runner/flutter_window.h" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/windows/runner/main.cpp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/windows/runner/resource.h" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/windows/runner/resources/app_icon.ico" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/windows/runner/runner.exe.manifest" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/windows/runner/utils.cpp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/windows/runner/utils.h" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/windows/runner/win32_window.cpp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bubblesheet_frontend/windows/runner/win32_window.h" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/db.sqlite3" beforeDir="false" afterPath="$PROJECT_DIR$/db.sqlite3" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/debug.log" beforeDir="false" afterPath="$PROJECT_DIR$/debug.log" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/grading/grade_pipeline.py" beforeDir="false" afterPath="$PROJECT_DIR$/grading/grade_pipeline.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/grading/models.py" beforeDir="false" afterPath="$PROJECT_DIR$/grading/models.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/grading/serializers.py" beforeDir="false" afterPath="$PROJECT_DIR$/grading/serializers.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/grading/urls.py" beforeDir="false" afterPath="$PROJECT_DIR$/grading/urls.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/grading/views.py" beforeDir="false" afterPath="$PROJECT_DIR$/grading/views.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/media/answer_sheets/6850262447fcb96a30c8c1ec.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/media/answer_sheets/6850262447fcb96a30c8c1ec.pdf" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/media/answer_sheets/None.json" beforeDir="false" afterPath="$PROJECT_DIR$/media/answer_sheets/None.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/media/answer_sheets/None.pdf" beforeDir="false" afterPath="$PROJECT_DIR$/media/answer_sheets/None.pdf" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/media/answer_sheets/None_preview.png" beforeDir="false" afterPath="$PROJECT_DIR$/media/answer_sheets/None_preview.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/media/answer_sheets/previews/6850262447fcb96a30c8c1ec_preview.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/media/answer_sheets/previews/None_preview.png" beforeDir="false" afterPath="$PROJECT_DIR$/media/answer_sheets/previews/None_preview.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/requirements.txt" beforeDir="false" afterPath="$PROJECT_DIR$/requirements.txt" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="EmbeddingIndexingInfo">
+    <option name="cachedIndexableFilesCount" value="185" />
+    <option name="fileBasedEmbeddingIndicesEnabled" value="true" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;,
+    &quot;assignee&quot;: &quot;NgnDinhThanh&quot;
+  }
+}</component>
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/NgnDinhThanh/datn.git&quot;,
+    &quot;accountId&quot;: &quot;c40e4c4d-3f17-43f9-a3fd-4838c4c3d55d&quot;
+  }
+}</component>
+  <component name="McpProjectServerCommands">
+    <commands />
+    <urls />
+  </component>
+  <component name="ProjectColorInfo">{
+  &quot;customColor&quot;: &quot;&quot;,
+  &quot;associatedIndex&quot;: 4
+}</component>
+  <component name="ProjectId" id="371vtb2ZqI9MxxqVc4HjaPKH5lD" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;Django Server.bubblesheet_backend.executor&quot;: &quot;Run&quot;,
+    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
+    &quot;Notification.DisplayName-DoNotAsk-DatabaseConfigFileWatcher.found&quot;: &quot;New/updated database configurations found&quot;,
+    &quot;Notification.DoNotAsk-DatabaseConfigFileWatcher.found&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.MCP Project settings loaded&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.OpenDjangoStructureViewOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.typescript.service.memoryLimit.init&quot;: &quot;true&quot;,
+    &quot;ai.playground.ignore.import.keys.banner.in.settings&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  },
+  &quot;keyToStringList&quot;: {
+    &quot;DatabaseDriversLRU&quot;: [
+      &quot;mongo&quot;
+    ]
+  }
+}</component>
+  <component name="RecapSpentCounter">
+    <option name="endsOfQuotaMs" value="1768622499388" />
+    <option name="spentUsd" value="0.028645452" />
+  </component>
+  <component name="RecapUselessUpdatesCounter">
+    <option name="suspendCountdown" value="0" />
+  </component>
+  <component name="RunManager">
+    <configuration name="bubblesheet_backend" type="Python.DjangoServer" factoryName="Django server">
+      <module name="bubblesheet_backend" />
+      <option name="ENV_FILES" value="" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+        <env name="DJANGO_SETTINGS_MODULE" value="bubblesheet_backend.settings" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="" />
+      <option name="IS_MODULE_SDK" value="false" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="RUN_TOOL" value="" />
+      <option name="launchJavascriptDebuger" value="false" />
+      <option name="port" value="8000" />
+      <option name="host" value="" />
+      <option name="additionalOptions" value="" />
+      <option name="browserUrl" value="" />
+      <option name="runTestServer" value="false" />
+      <option name="runNoReload" value="false" />
+      <option name="useCustomRunCommand" value="false" />
+      <option name="customRunCommand" value="" />
+      <method v="2" />
+    </configuration>
+  </component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-js-predefined-d6986cc7102b-9b0f141eb926-JavaScript-PY-253.29346.142" />
+        <option value="bundled-python-sdk-f2b7a9f6281b-6e1f45a539f7-com.jetbrains.pycharm.pro.sharedIndexes.bundled-PY-253.29346.142" />
+      </set>
+    </attachedChunks>
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="840fbaef-aec4-446e-a82b-f0eb3d15ba86" name="Changes" comment="" />
+      <created>1766083610921</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1766083610921</updated>
+      <workItem from="1766083613034" duration="2905000" />
+      <workItem from="1766196455412" duration="2726000" />
+      <workItem from="1766199852842" duration="5989000" />
+      <workItem from="1766284221518" duration="5080000" />
+      <workItem from="1766300535808" duration="15467000" />
+      <workItem from="1766503107435" duration="3054000" />
+      <workItem from="1766596314024" duration="698000" />
+      <workItem from="1766842361652" duration="6406000" />
+      <workItem from="1767010649086" duration="1307000" />
+      <workItem from="1767018916023" duration="14117000" />
+      <workItem from="1767325922369" duration="11794000" />
+      <workItem from="1767656228313" duration="272000" />
+      <workItem from="1767665555934" duration="15000" />
+      <workItem from="1767743360587" duration="1728000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+</project>
