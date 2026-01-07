@@ -126,8 +126,20 @@ class GenerateAnswerKeyView(APIView):
         # Check if first row is header
         first_row = next(reader, None)
         if first_row and len(first_row) > 1:
-            # 2+ columns format with header
-            start_index = 1
+            # 2+ columns format - check if first row is header or data
+            first_answer = first_row[1].strip().upper() if len(first_row) > 1 else ''
+            first_answer = first_answer.replace('\ufeff', '')
+            is_header = first_answer not in ['A', 'B', 'C', 'D', 'E']
+            
+            if not is_header:
+                # First row is data (no header) - process it
+                answer = first_answer
+                questions.append({
+                    'question_code': first_row[0].strip(),
+                    'answer': answer
+                })
+            
+            # Process remaining rows
             for index, row in enumerate(reader, start=2):
                 if not row or len(row) < 2:
                     continue
