@@ -22,6 +22,12 @@ void main() async{
   await Hive.openBox('exams_cache');
   await Hive.openBox('classes_cache');
   await Hive.openBox('students_cache');
+  await Hive.openBox('grades_cache');
+  await Hive.openBox('item_analysis_cache');
+  await Hive.openBox('crud_operations_queue');
+  await Hive.openBox('answer_sheets_cache');
+  await Hive.openBox('answer_sheet_templates_cache');
+
 
   // Debug: Log API baseUrl khi app khởi động
   ApiService.logBaseUrl();

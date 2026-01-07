@@ -1,3 +1,8 @@
+import 'package:bubblesheet_frontend/services/answer_key_cache_service.dart';
+import 'package:bubblesheet_frontend/services/grade_cache_service.dart';
+import 'package:bubblesheet_frontend/services/grading_result_queue_service.dart';
+import 'package:bubblesheet_frontend/services/item_analysis_cache_service.dart';
+import 'package:bubblesheet_frontend/services/sync_service.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -15,6 +20,7 @@ import 'item_analysis_screen.dart';
 
 class QuizDetailScreen extends StatefulWidget {
   final ExamModel quiz;
+
   const QuizDetailScreen({Key? key, required this.quiz}) : super(key: key);
 
   @override
@@ -32,9 +38,9 @@ class _QuizDetailScreenState extends State<QuizDetailScreen> {
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Could not open PDF file.')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Could not open PDF file.')));
     }
   }
 
@@ -47,52 +53,122 @@ class _QuizDetailScreenState extends State<QuizDetailScreen> {
   }
 
   Future<void> _checkGradingStatus() async {
-    final token = Provider.of<AuthProvider>(context, listen: false).token;
-    if (token == null) return;
+    String quizId = widget.quiz.id;
+    if (quizId.startsWith('ObjectId(')) {
+      quizId = quizId.substring(9, quizId.length - 2);
+    }
 
     setState(() {
       _isLoadingGrading = true;
     });
 
+    bool hasKey = AnswerKeyCacheService.hasAnswerKey(quizId);
+    int papersCount = 0;
     try {
-      // Normalize quiz ID
-      String quizId = widget.quiz.id;
-      if (quizId.startsWith('ObjectId(')) {
-        quizId = quizId.substring(9, quizId.length - 2);
-      }
-      
-      // Check answer key
-      final hasKey = await GradingService.checkAnswerKey(quizId, token);
-      
-      // Get papers count
-      final grades = await GradingService.getGradesForQuiz(quizId, token);
-      
-      setState(() {
-        _hasAnswerKey = hasKey;
-        _papersCount = grades.length;
-        _isLoadingGrading = false;
-      });
+      final cachedCount = GradeCacheService.getCacheGradesCount(quizId);
+      final pendingResults = GradingResultQueueService.getPendingResults();
+      final pendingCount = pendingResults.where((item) {
+        try {
+          final dataRaw = item['data'];
+          if (dataRaw == null) return false;
+          final data = Map<String, dynamic>.from(dataRaw as Map);
+          final itemQuizId =
+              data['quizId']?.toString() ?? data['quiz_id']?.toString();
+          return itemQuizId == quizId;
+        } catch (e) {
+          print('[QuizDetail] Error parsing pending result: $e');
+          return false;
+        }
+      }).length;
+      papersCount = cachedCount + pendingCount;
     } catch (e) {
-      setState(() {
-        _isLoadingGrading = false;
-      });
+      print('[QuizDetail] Error checking cached/pending grades: $e');
+      papersCount = 0;
+    }
+
+    setState(() {
+      _hasAnswerKey = hasKey;
+      _papersCount = papersCount;
+      _isLoadingGrading = false;
+    });
+
+    final token = Provider.of<AuthProvider>(context, listen: false).token;
+    if (token != null) {
+      final hasNetwork = await SyncService.hasNetworkConnection();
+      if (hasNetwork) {
+        try {
+          // Check answer key từ API
+          final hasKeyFromApi = await GradingService.checkAnswerKey(
+            quizId,
+            token,
+          );
+
+          // Get grades từ API
+          final grades = await GradingService.getGradesForQuiz(quizId, token);
+          await GradeCacheService.cacheGradesForQuiz(quizId, grades);
+
+          // Update pending count
+          final pendingResults = GradingResultQueueService.getPendingResults();
+          final pendingCount = pendingResults.where((item) {
+            try {
+              final dataRaw = item['data'];
+              if (dataRaw == null) return false;
+              final data = Map<String, dynamic>.from(dataRaw as Map);
+              final itemQuizId =
+                  data['quizId']?.toString() ?? data['quiz_id']?.toString();
+              return itemQuizId == quizId;
+            } catch (e) {
+              return false;
+            }
+          }).length;
+
+          if (mounted) {
+            setState(() {
+              _hasAnswerKey = hasKeyFromApi;
+              _papersCount = grades.length + pendingCount;
+            });
+          }
+        } catch (e) {
+          print('[QuizDetail] Error fetching latest data: $e');
+          // Không cần xử lý lỗi vì đã có cache data
+        }
+      }
     }
   }
 
   Future<ItemAnalysisModel?> _getItemAnalysis() async {
-    try {
-      final token = Provider.of<AuthProvider>(context, listen: false).token;
-      if (token == null) return null;
-
-      String quizId = widget.quiz.id;
-      if (quizId.startsWith('ObjectId(')) {
-        quizId = quizId.substring(9, quizId.length - 2);
-      }
-
-      return await GradingService.getItemAnalysis(quizId, token);
-    } catch (e) {
-      return null;
+    String quizId = widget.quiz.id;
+    if (quizId.startsWith('ObjectId(')) {
+      quizId = quizId.substring(9, quizId.length - 2);
     }
+
+    try {
+      final cached = ItemAnalysisCacheService.getCachedItemAnalysis(quizId);
+      if (cached != null) {
+        return cached; // ✅ Return ngay nếu có cache
+      }
+    } catch (e) {
+      print('[QuizDetail] Error loading cached item analysis: $e');
+    }
+
+    final token = Provider.of<AuthProvider>(context, listen: false).token;
+    if (token != null) {
+      final hasNetwork = await SyncService.hasNetworkConnection();
+      if (hasNetwork) {
+        try {
+          final analysis = await GradingService.getItemAnalysis(quizId, token);
+          if (analysis != null) {
+            await ItemAnalysisCacheService.cacheItemAnalysis(quizId, analysis);
+          }
+          return analysis;
+        } catch (e) {
+          print('[QuizDetail] Error fetching item analysis: $e');
+          return null;
+        }
+      }
+    }
+
+    return null;
   }
 
   void _showPrintOptions(BuildContext context, String filePdf) {
@@ -116,7 +192,9 @@ class _QuizDetailScreenState extends State<QuizDetailScreen> {
                 title: const Text('Copy link'),
                 onTap: () {
                   Clipboard.setData(ClipboardData(text: filePdf));
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Đã copy link PDF!')));
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Đã copy link PDF!')),
+                  );
                   Navigator.pop(ctx);
                 },
               ),
@@ -137,11 +215,18 @@ class _QuizDetailScreenState extends State<QuizDetailScreen> {
     return SizedBox(
       width: double.infinity,
       child: ElevatedButton.icon(
-        icon: Icon(icon, color: isDetailsTab ? (isEnabled ? Colors.white : Colors.grey) : Colors.white),
+        icon: Icon(
+          icon,
+          color: isDetailsTab
+              ? (isEnabled ? Colors.white : Colors.grey)
+              : Colors.white,
+        ),
         label: Text(
           label,
           style: TextStyle(
-            color: isDetailsTab ? (isEnabled ? Colors.white : Colors.grey) : Colors.white,
+            color: isDetailsTab
+                ? (isEnabled ? Colors.white : Colors.grey)
+                : Colors.white,
             fontSize: 18,
           ),
         ),
@@ -164,17 +249,25 @@ class _QuizDetailScreenState extends State<QuizDetailScreen> {
 
     // Nếu danh sách class hoặc answer sheet rỗng, tự động fetch
     if (classProvider.classes.isEmpty) {
-      Future.microtask(() => Provider.of<ClassProvider>(context, listen: false).fetchClasses(context));
+      Future.microtask(
+        () => Provider.of<ClassProvider>(
+          context,
+          listen: false,
+        ).fetchClasses(context),
+      );
     }
     if (answerSheetProvider.answerSheets.isEmpty) {
-      Future.microtask(() => Provider.of<AnswerSheetProvider>(context, listen: false).fetchAnswerSheets(context));
+      Future.microtask(
+        () => Provider.of<AnswerSheetProvider>(
+          context,
+          listen: false,
+        ).fetchAnswerSheets(context),
+      );
     }
 
     // Nếu đang loading dữ liệu, show loading indicator
     if (classProvider.isLoading || answerSheetProvider.isLoading) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
     final classCodeToName = Provider.of<ClassProvider>(context).classCodeToName;
@@ -184,15 +277,18 @@ class _QuizDetailScreenState extends State<QuizDetailScreen> {
       }
       return id;
     }
+
     final quizAnswerSheetId = normalizeId(widget.quiz.answersheet);
     final answerSheetList = answerSheetProvider.answerSheets
         .where((a) => a.id == quizAnswerSheetId)
         .toList();
-    final answerSheet = answerSheetList.isNotEmpty ? answerSheetList.first : null;
+    final answerSheet = answerSheetList.isNotEmpty
+        ? answerSheetList.first
+        : null;
     final answerSheetName = answerSheet?.name ?? widget.quiz.answersheet;
     final numQuestions = answerSheet?.numQuestions?.toString() ?? '--';
     final filePdf = answerSheet?.filePdf ?? '';
-    
+
     // Determine button states
     final canScan = _hasAnswerKey && answerSheet != null;
     final canReview = _papersCount > 0;
@@ -243,7 +339,10 @@ class _QuizDetailScreenState extends State<QuizDetailScreen> {
                     ),
                     Text(
                       widget.quiz.name,
-                      style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                      style: const TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     const SizedBox(height: 16),
                     Card(
@@ -259,12 +358,26 @@ class _QuizDetailScreenState extends State<QuizDetailScreen> {
                           children: [
                             Row(
                               children: [
-                                const Text('Classes', style: TextStyle(fontSize: 16, color: Colors.grey)),
+                                const Text(
+                                  'Classes',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    color: Colors.grey,
+                                  ),
+                                ),
                                 const SizedBox(width: 16),
                                 Expanded(
                                   child: Text(
-                                    widget.quiz.class_codes.map((code) => classCodeToName[code] ?? code).join(', '),
-                                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                                    widget.quiz.class_codes
+                                        .map(
+                                          (code) =>
+                                              classCodeToName[code] ?? code,
+                                        )
+                                        .join(', '),
+                                    style: const TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                    ),
                                   ),
                                 ),
                               ],
@@ -273,52 +386,94 @@ class _QuizDetailScreenState extends State<QuizDetailScreen> {
                             Row(
                               crossAxisAlignment: CrossAxisAlignment.center,
                               children: [
-                                const Text('Answer Sheet', style: TextStyle(fontSize: 16, color: Colors.grey)),
+                                const Text(
+                                  'Answer Sheet',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    color: Colors.grey,
+                                  ),
+                                ),
                                 const SizedBox(width: 16),
                                 Expanded(
                                   child: Text(
                                     answerSheetName,
-                                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                                    style: const TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                    ),
                                   ),
                                 ),
                                 if (filePdf.isNotEmpty)
                                   IconButton(
-                                    icon: const Icon(Icons.print, color: Color(0xFF2E7D32)),
+                                    icon: const Icon(
+                                      Icons.print,
+                                      color: Color(0xFF2E7D32),
+                                    ),
                                     tooltip: 'Print Answer Sheet',
-                                    onPressed: () => _showPrintOptions(context, filePdf),
+                                    onPressed: () =>
+                                        _showPrintOptions(context, filePdf),
                                   ),
                               ],
                             ),
                             const SizedBox(height: 8),
                             Row(
                               children: [
-                                const Text('Date', style: TextStyle(fontSize: 16, color: Colors.grey)),
+                                const Text(
+                                  'Date',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    color: Colors.grey,
+                                  ),
+                                ),
                                 const SizedBox(width: 16),
                                 Text(
                                   widget.quiz.date,
-                                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                                  style: const TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
                               ],
                             ),
                             const SizedBox(height: 8),
                             Row(
                               children: [
-                                const Text('Papers', style: TextStyle(fontSize: 16, color: Colors.grey)),
+                                const Text(
+                                  'Papers',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    color: Colors.grey,
+                                  ),
+                                ),
                                 const SizedBox(width: 16),
                                 Text(
-                                  _isLoadingGrading ? '...' : _papersCount.toString(),
-                                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                                  _isLoadingGrading
+                                      ? '...'
+                                      : _papersCount.toString(),
+                                  style: const TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
                               ],
                             ),
                             const SizedBox(height: 8),
                             Row(
                               children: [
-                                const Text('Questions', style: TextStyle(fontSize: 16, color: Colors.grey)),
+                                const Text(
+                                  'Questions',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    color: Colors.grey,
+                                  ),
+                                ),
                                 const SizedBox(width: 16),
                                 Text(
                                   numQuestions,
-                                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                                  style: const TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
                               ],
                             ),
@@ -358,13 +513,19 @@ class _QuizDetailScreenState extends State<QuizDetailScreen> {
                             icon: Icons.image_search,
                             label: 'REVIEW PAPERS',
                             onPressed: canReview
-                                ? () {
-                                    Navigator.push(
+                                ? () async {
+                                    await Navigator.push(
                                       context,
                                       MaterialPageRoute(
-                                        builder: (_) => ReviewPapersScreen(quiz: widget.quiz),
+                                        builder: (_) => ReviewPapersScreen(
+                                          quiz: widget.quiz,
+                                        ),
                                       ),
                                     );
+                                    // ✅ Refresh grading status sau khi quay về từ ReviewPapersScreen
+                                    if (mounted) {
+                                      _checkGradingStatus();
+                                    }
                                   }
                                 : null,
                             isEnabled: canReview,
@@ -379,7 +540,9 @@ class _QuizDetailScreenState extends State<QuizDetailScreen> {
                                     Navigator.push(
                                       context,
                                       MaterialPageRoute(
-                                        builder: (_) => ItemAnalysisScreen(quiz: widget.quiz),
+                                        builder: (_) => ItemAnalysisScreen(
+                                          quiz: widget.quiz,
+                                        ),
                                       ),
                                     );
                                   }
@@ -416,18 +579,25 @@ class _QuizDetailScreenState extends State<QuizDetailScreen> {
                             const Center(
                               child: Text(
                                 'Score Percent',
-                                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.grey),
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.grey,
+                                ),
                               ),
                             ),
                             const SizedBox(height: 16),
                             FutureBuilder<ItemAnalysisModel?>(
                               future: _getItemAnalysis(),
                               builder: (context, snapshot) {
-                                if (snapshot.connectionState == ConnectionState.waiting) {
-                                  return const Center(child: Padding(
-                                    padding: EdgeInsets.all(16.0),
-                                    child: CircularProgressIndicator(),
-                                  ));
+                                if (snapshot.connectionState ==
+                                    ConnectionState.waiting) {
+                                  return const Center(
+                                    child: Padding(
+                                      padding: EdgeInsets.all(16.0),
+                                      child: CircularProgressIndicator(),
+                                    ),
+                                  );
                                 }
                                 if (snapshot.hasError || !snapshot.hasData) {
                                   return Column(
@@ -436,18 +606,42 @@ class _QuizDetailScreenState extends State<QuizDetailScreen> {
                                       _buildStatRow('Max. Score', '--', '--'),
                                       _buildStatRow('Average', '--', '--'),
                                       _buildStatRow('Median', '--', '--'),
-                                      _buildStatRow('Std. Deviation', '--', '--'),
+                                      _buildStatRow(
+                                        'Std. Deviation',
+                                        '--',
+                                        '--',
+                                      ),
                                     ],
                                   );
                                 }
                                 final stats = snapshot.data!.statistics;
                                 return Column(
                                   children: [
-                                    _buildStatRow('Min. Score', stats.minScore.toStringAsFixed(1), ''),
-                                    _buildStatRow('Max. Score', stats.maxScore.toStringAsFixed(1), ''),
-                                    _buildStatRow('Average', stats.averageScore.toStringAsFixed(1), ''),
-                                    _buildStatRow('Median', stats.medianScore.toStringAsFixed(1), ''),
-                                    _buildStatRow('Std. Deviation', stats.stdDeviation.toStringAsFixed(2), ''),
+                                    _buildStatRow(
+                                      'Min. Score',
+                                      stats.minScore.toStringAsFixed(1),
+                                      '',
+                                    ),
+                                    _buildStatRow(
+                                      'Max. Score',
+                                      stats.maxScore.toStringAsFixed(1),
+                                      '',
+                                    ),
+                                    _buildStatRow(
+                                      'Average',
+                                      stats.averageScore.toStringAsFixed(1),
+                                      '',
+                                    ),
+                                    _buildStatRow(
+                                      'Median',
+                                      stats.medianScore.toStringAsFixed(1),
+                                      '',
+                                    ),
+                                    _buildStatRow(
+                                      'Std. Deviation',
+                                      stats.stdDeviation.toStringAsFixed(2),
+                                      '',
+                                    ),
                                   ],
                                 );
                               },
@@ -487,13 +681,20 @@ class _QuizDetailScreenState extends State<QuizDetailScreen> {
                             icon: Icons.image_search,
                             label: 'REVIEW PAPERS',
                             onPressed: canReview
-                                ? () {
-                                    Navigator.push(
+                                ? () async {
+                                    // ✅ Pass callback để refresh khi quay lại
+                                    final result = await Navigator.push(
                                       context,
                                       MaterialPageRoute(
-                                        builder: (_) => ReviewPapersScreen(quiz: widget.quiz),
+                                        builder: (_) => ReviewPapersScreen(
+                                          quiz: widget.quiz,
+                                        ),
                                       ),
                                     );
+                                    // ✅ Refresh grading status sau khi quay về từ ReviewPapersScreen
+                                    if (mounted) {
+                                      _checkGradingStatus();
+                                    }
                                   }
                                 : null,
                             isEnabled: canReview,
@@ -508,7 +709,9 @@ class _QuizDetailScreenState extends State<QuizDetailScreen> {
                                     Navigator.push(
                                       context,
                                       MaterialPageRoute(
-                                        builder: (_) => ItemAnalysisScreen(quiz: widget.quiz),
+                                        builder: (_) => ItemAnalysisScreen(
+                                          quiz: widget.quiz,
+                                        ),
                                       ),
                                     );
                                   }
@@ -538,9 +741,21 @@ class _QuizDetailScreenState extends State<QuizDetailScreen> {
           Text(label, style: const TextStyle(fontSize: 16, color: Colors.grey)),
           Row(
             children: [
-              Text(score, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              Text(
+                score,
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
               const SizedBox(width: 24),
-              Text(percent, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              Text(
+                percent,
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
             ],
           ),
         ],

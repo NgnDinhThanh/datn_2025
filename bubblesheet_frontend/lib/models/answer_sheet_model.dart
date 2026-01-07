@@ -45,4 +45,20 @@ class AnswerSheet {
       filePreview: json['file_preview'] ?? '',
     );
   }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'name': name,
+      'created_at': createdAt.toIso8601String(),
+      'num_questions': numQuestions,
+      'num_options': numOptions,
+      'student_id_digits': studentIdDigits,
+      'exam_id_digits': examIdDigits,
+      'class_id_digits': classIdDigits,
+      'file_pdf': filePdf,
+      'file_json': fileJson,
+      'file_preview': filePreview,
+    };
+  }
 } 

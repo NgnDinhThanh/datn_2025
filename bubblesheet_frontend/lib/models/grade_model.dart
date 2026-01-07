@@ -46,6 +46,24 @@ class GradeModel {
       teacherId: json['teacher_id']?.toString(),
     );
   }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'class_code': classCode,
+      'exam_id': examId,
+      'student_id': studentId,
+      'score': score,
+      'percentage': percentage,
+      'answers': answers,
+      'scanned_image': scannedImage,
+      'annotated_image': annotatedImage,
+      'scanned_at': scannedAt?.toIso8601String(),
+      'version_code': versionCode,
+      'answersheet_id': answersheetId,
+      'teacher_id': teacherId,
+    };
+  }
 }
 
 class ItemAnalysisModel {

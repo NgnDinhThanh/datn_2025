@@ -1,3 +1,5 @@
+import 'package:bubblesheet_frontend/services/item_analysis_cache_service.dart';
+import 'package:bubblesheet_frontend/services/sync_service.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/exam_model.dart';
@@ -34,28 +36,87 @@ class _ItemAnalysisScreenState extends State<ItemAnalysisScreen> {
       _error = null;
     });
 
+    String quizId = widget.quiz.id;
+    if (quizId.startsWith('ObjectId(')) {
+      quizId = quizId.substring(9, quizId.length - 2);
+    }
+
     try {
-      final token = Provider.of<AuthProvider>(context, listen: false).token;
-      if (token == null) {
-        throw Exception('Not authenticated');
-      }
+      final cached = ItemAnalysisCacheService.getCachedItemAnalysis(quizId);
+      if (cached != null) {
+        // ✅ Hiển thị cache ngay
+        setState(() {
+          _analysis = cached;
+          _isLoading = false;
+        });
 
-      String quizId = widget.quiz.id;
-      if (quizId.startsWith('ObjectId(')) {
-        quizId = quizId.substring(9, quizId.length - 2);
+        // ✅ BỎ check network - không cần thiết khi đã có cache
+        // Fetch từ API ở background (nếu có mạng) để update cache
+        final token = Provider.of<AuthProvider>(context, listen: false).token;
+        if (token != null) {
+          // Check network ở background, không block UI
+          SyncService.hasNetworkConnection().then((hasNetwork) {
+            if (hasNetwork && mounted) {
+              // Fetch ở background
+              GradingService.getItemAnalysis(quizId, token).then((analysis) async {
+                if (analysis != null && mounted) {
+                  await ItemAnalysisCacheService.cacheItemAnalysis(quizId, analysis);
+                  if (mounted) {
+                    setState(() {
+                      _analysis = analysis;
+                    });
+                  }
+                }
+              }).catchError((e) {
+                print('[ItemAnalysis] Error fetching fresh analysis: $e');
+              });
+            }
+          });
+        }
+        return; // ✅ Return ngay
       }
-
-      final analysis = await GradingService.getItemAnalysis(quizId, token);
-      
-      setState(() {
-        _analysis = analysis;
-        _isLoading = false;
-      });
     } catch (e) {
-      setState(() {
-        _error = e.toString();
-        _isLoading = false;
-      });
+      print('[ItemAnalysis] Error loading cached analysis: $e');
+    }
+
+    // Chỉ fetch từ API nếu không có cache
+    final token = Provider.of<AuthProvider>(context, listen: false).token;
+    if (token != null) {
+      final hasNetwork = await SyncService.hasNetworkConnection();
+      if (hasNetwork) {
+        try {
+          final analysis = await GradingService.getItemAnalysis(quizId, token);
+          if (analysis != null) {
+            await ItemAnalysisCacheService.cacheItemAnalysis(quizId, analysis);
+          }
+
+          setState(() {
+            _analysis = analysis;
+            _isLoading = false;
+          });
+        } catch (e) {
+          if (_analysis == null) {
+            setState(() {
+              _error = e.toString();
+              _isLoading = false;
+            });
+          }
+        }
+      } else {
+        if (_analysis == null) {
+          setState(() {
+            _error = 'No data. Please connect network.';
+            _isLoading = false;
+          });
+        }
+      }
+    } else {
+      if (_analysis == null) {
+        setState(() {
+          _error = 'Not authenticated';
+          _isLoading = false;
+        });
+      }
     }
   }
 

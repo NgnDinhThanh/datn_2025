@@ -1,4 +1,7 @@
 import 'dart:convert';
+import 'package:bubblesheet_frontend/services/grade_cache_service.dart';
+import 'package:bubblesheet_frontend/services/grading_result_queue_service.dart';
+import 'package:bubblesheet_frontend/services/sync_service.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:http/http.dart' as http;
@@ -7,14 +10,12 @@ import '../models/grade_model.dart';
 import '../services/grading_service.dart';
 import '../services/api_service.dart';
 import '../providers/auth_provider.dart';
+import 'package:flutter/scheduler.dart';
 
 class ReviewPapersScreen extends StatefulWidget {
   final ExamModel quiz;
 
-  const ReviewPapersScreen({
-    Key? key,
-    required this.quiz,
-  }) : super(key: key);
+  const ReviewPapersScreen({Key? key, required this.quiz}) : super(key: key);
 
   @override
   State<ReviewPapersScreen> createState() => _ReviewPapersScreenState();
@@ -24,46 +25,303 @@ class _ReviewPapersScreenState extends State<ReviewPapersScreen> {
   List<GradeModel> _grades = [];
   bool _isLoading = true;
   String? _error;
+  int _lastPendingCount = 0; // Track pending count để refresh khi có thay đổi
+  bool _isLoadingGrades = false; // Flag để tránh gọi _loadGrades() nhiều lần cùng lúc
 
   @override
   void initState() {
     super.initState();
     _loadGrades();
+    _lastPendingCount = _getPendingCount();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // ✅ Update pending count
+    final currentPendingCount = _getPendingCount();
+    // ✅ Nếu pending count thay đổi, refresh ngay
+    if (currentPendingCount != _lastPendingCount && !_isLoadingGrades) {
+      _lastPendingCount = currentPendingCount;
+      _loadGrades();
+    } else {
+      _lastPendingCount = currentPendingCount;
+    }
+  }
+
+  int _getPendingCount() {
+    String quizId = widget.quiz.id;
+    if (quizId.startsWith('ObjectId(')) {
+      quizId = quizId.substring(9, quizId.length - 2);
+    }
+    final pendingResults = GradingResultQueueService.getPendingResults();
+    return pendingResults.where((item) {
+      try {
+        final dataRaw = item['data'];
+        if (dataRaw == null) return false;
+        final data = Map<String, dynamic>.from(dataRaw as Map);
+        final itemQuizId = data['quizId']?.toString() ?? data['quiz_id']?.toString();
+        return itemQuizId == quizId;
+      } catch (e) {
+        return false;
+      }
+    }).length;
   }
 
   Future<void> _loadGrades() async {
+    // ✅ Tránh gọi nhiều lần cùng lúc
+    if (_isLoadingGrades) {
+      print('[ReviewPapers] _loadGrades() already in progress, skipping...');
+      return;
+    }
+    
+    _isLoadingGrades = true;
     setState(() {
       _isLoading = true;
       _error = null;
     });
 
+    String quizId = widget.quiz.id;
+    if (quizId.startsWith('ObjectId(')) {
+      quizId = quizId.substring(9, quizId.length - 2);
+    }
+
     try {
-      final token = Provider.of<AuthProvider>(context, listen: false).token;
-      if (token == null) {
-        throw Exception('Not authenticated');
-      }
-
-      String quizId = widget.quiz.id;
-      if (quizId.startsWith('ObjectId(')) {
-        quizId = quizId.substring(9, quizId.length - 2);
-      }
-
-      final grades = await GradingService.getGradesForQuiz(quizId, token);
+      final cachedGrades = GradeCacheService.getCachedGradesForQuiz(quizId);
+      final allGrades = <GradeModel>[];
       
-      setState(() {
-        _grades = grades;
-        _isLoading = false;
-      });
+      // Thêm cached grades
+      if (cachedGrades != null && cachedGrades.isNotEmpty) {
+        allGrades.addAll(cachedGrades);
+      }
+
+      // ✅ Lấy pending results và convert thành GradeModel
+      final pendingResults = GradingResultQueueService.getPendingResults();
+      print('[ReviewPapers] Total pending results: ${pendingResults.length}');
+      final pendingForQuiz = pendingResults.where((item) {
+        try {
+          final dataRaw = item['data'];
+          if (dataRaw == null) return false;
+          final data = Map<String, dynamic>.from(dataRaw as Map);
+          final itemQuizId =
+              data['quizId']?.toString() ?? data['quiz_id']?.toString();
+          return itemQuizId == quizId;
+        } catch (e) {
+          return false;
+        }
+      }).toList();
+      print('[ReviewPapers] Pending results for quiz $quizId: ${pendingForQuiz.length}');
+
+      // Convert pending results thành GradeModel
+      int mergedCount = 0;
+      int skippedCount = 0;
+      for (var pendingItem in pendingForQuiz) {
+        try {
+          final dataRaw = pendingItem['data'];
+          if (dataRaw == null) continue;
+          final data = Map<String, dynamic>.from(dataRaw as Map);
+          
+          // ✅ Normalize values để so sánh đúng (null -> empty string)
+          final studentId = (data['studentId']?.toString() ?? data['student_id']?.toString() ?? '').trim();
+          final classId = (data['classId']?.toString() ?? data['class_id']?.toString() ?? '').trim();
+          final versionCode = (data['versionCode']?.toString() ?? data['version_code']?.toString() ?? '').trim();
+          
+          // ✅ Check duplicate với normalized values
+          final alreadyExists = allGrades.any((g) {
+            final gStudentId = (g.studentId ?? '').trim();
+            final gClassCode = (g.classCode ?? '').trim();
+            final gVersionCode = (g.versionCode ?? '').trim();
+            
+            return gStudentId == studentId && 
+                   gClassCode == classId &&
+                   gVersionCode == versionCode;
+          });
+          
+          if (!alreadyExists) {
+            // Tạo GradeModel từ pending result
+            allGrades.add(GradeModel(
+              id: pendingItem['id']?.toString() ?? 'pending_${DateTime.now().millisecondsSinceEpoch}',
+              classCode: classId.isEmpty ? '' : classId,
+              examId: quizId,
+              studentId: studentId.isEmpty ? '' : studentId,
+              score: data['score'] != null ? (data['score'] is int ? data['score'].toDouble() : data['score']) : null,
+              percentage: data['percentage'] != null ? (data['percentage'] is int ? data['percentage'].toDouble() : data['percentage']) : null,
+              answers: data['answers'] is Map ? Map<String, dynamic>.from(data['answers']) : {},
+              scannedImage: data['scannedImage']?.toString() ?? data['scanned_image']?.toString(),
+              annotatedImage: data['annotatedImage']?.toString() ?? data['annotated_image']?.toString(),
+              scannedAt: data['scannedAt'] != null ? DateTime.tryParse(data['scannedAt'].toString()) : 
+                        (data['scanned_at'] != null ? DateTime.tryParse(data['scanned_at'].toString()) : DateTime.now()),
+              versionCode: versionCode.isEmpty ? null : versionCode,
+              answersheetId: data['answersheetId']?.toString() ?? data['answersheet_id']?.toString(),
+            ));
+            mergedCount++;
+            print('[ReviewPapers] Merged pending result: studentId=$studentId, classId=$classId, versionCode=$versionCode');
+          } else {
+            skippedCount++;
+            print('[ReviewPapers] Skipped duplicate pending result: studentId=$studentId, classId=$classId, versionCode=$versionCode');
+          }
+        } catch (e) {
+          print('[ReviewPapers] Error converting pending result to GradeModel: $e');
+        }
+      }
+      print('[ReviewPapers] Merge summary: merged=$mergedCount, skipped=$skippedCount');
+
+      // ✅ Luôn set grades (dù empty hay không) và set loading = false
+      print('[ReviewPapers] Total grades after merge (offline): ${allGrades.length} (cached: ${cachedGrades?.length ?? 0}, pending: ${pendingForQuiz.length})');
+      if (mounted) {
+        setState(() {
+          _grades = allGrades;
+          _isLoading = false;
+        });
+      }
     } catch (e) {
-      setState(() {
-        _error = e.toString();
-        _isLoading = false;
-      });
+      print('[ReviewPapers] Error loading cached grades: $e');
+      // ✅ Vẫn set loading = false khi có lỗi
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    } finally {
+      _isLoadingGrades = false;
+    }
+
+    final token = Provider.of<AuthProvider>(context, listen: false).token;
+    if (token != null) {
+      final hasNetwork = await SyncService.hasNetworkConnection();
+      if (hasNetwork) {
+        try {
+          final grades = await GradingService.getGradesForQuiz(quizId, token);
+          await GradeCacheService.cacheGradesForQuiz(quizId, grades);
+
+          // ✅ Merge với pending results sau khi fetch từ API
+          final allGradesFromApi = <GradeModel>[];
+          allGradesFromApi.addAll(grades);
+
+          // Lấy pending results và merge vào
+          final pendingResults = GradingResultQueueService.getPendingResults();
+          final pendingForQuiz = pendingResults.where((item) {
+            try {
+              final dataRaw = item['data'];
+              if (dataRaw == null) return false;
+              final data = Map<String, dynamic>.from(dataRaw as Map);
+              final itemQuizId =
+                  data['quizId']?.toString() ?? data['quiz_id']?.toString();
+              return itemQuizId == quizId;
+            } catch (e) {
+              return false;
+            }
+          }).toList();
+
+          // Convert pending results thành GradeModel và merge
+          int mergedCount = 0;
+          int skippedCount = 0;
+          for (var pendingItem in pendingForQuiz) {
+            try {
+              final dataRaw = pendingItem['data'];
+              if (dataRaw == null) continue;
+              final data = Map<String, dynamic>.from(dataRaw as Map);
+              
+              // ✅ Normalize values để so sánh đúng (null -> empty string)
+              final studentId = (data['studentId']?.toString() ?? data['student_id']?.toString() ?? '').trim();
+              final classId = (data['classId']?.toString() ?? data['class_id']?.toString() ?? '').trim();
+              final versionCode = (data['versionCode']?.toString() ?? data['version_code']?.toString() ?? '').trim();
+              
+              // ✅ Check duplicate với normalized values
+              final alreadyExists = allGradesFromApi.any((g) {
+                final gStudentId = (g.studentId ?? '').trim();
+                final gClassCode = (g.classCode ?? '').trim();
+                final gVersionCode = (g.versionCode ?? '').trim();
+                
+                return gStudentId == studentId && 
+                       gClassCode == classId &&
+                       gVersionCode == versionCode;
+              });
+              
+              if (!alreadyExists) {
+                allGradesFromApi.add(GradeModel(
+                  id: pendingItem['id']?.toString() ?? 'pending_${DateTime.now().millisecondsSinceEpoch}',
+                  classCode: classId.isEmpty ? '' : classId,
+                  examId: quizId,
+                  studentId: studentId.isEmpty ? '' : studentId,
+                  score: data['score'] != null ? (data['score'] is int ? data['score'].toDouble() : data['score']) : null,
+                  percentage: data['percentage'] != null ? (data['percentage'] is int ? data['percentage'].toDouble() : data['percentage']) : null,
+                  answers: data['answers'] is Map ? Map<String, dynamic>.from(data['answers']) : {},
+                  scannedImage: data['scannedImage']?.toString() ?? data['scanned_image']?.toString(),
+                  annotatedImage: data['annotatedImage']?.toString() ?? data['annotated_image']?.toString(),
+                  scannedAt: data['scannedAt'] != null ? DateTime.tryParse(data['scannedAt'].toString()) : 
+                            (data['scanned_at'] != null ? DateTime.tryParse(data['scanned_at'].toString()) : DateTime.now()),
+                  versionCode: versionCode.isEmpty ? null : versionCode,
+                  answersheetId: data['answersheetId']?.toString() ?? data['answersheet_id']?.toString(),
+                ));
+                mergedCount++;
+                print('[ReviewPapers] Merged pending result (online): studentId=$studentId, classId=$classId, versionCode=$versionCode');
+              } else {
+                skippedCount++;
+                print('[ReviewPapers] Skipped duplicate pending result (online): studentId=$studentId, classId=$classId, versionCode=$versionCode');
+              }
+            } catch (e) {
+              print('[ReviewPapers] Error converting pending result to GradeModel: $e');
+            }
+          }
+          print('[ReviewPapers] Merge summary (online): merged=$mergedCount, skipped=$skippedCount');
+
+          print('[ReviewPapers] Total grades after merge (online): ${allGradesFromApi.length} (from API: ${grades.length}, pending: ${pendingForQuiz.length})');
+          if (mounted) {
+            setState(() {
+              _grades = allGradesFromApi; // ✅ Dùng merged grades
+              _isLoading = false;
+            });
+          }
+        } catch (e) {
+          if (mounted) {
+            if (_grades.isEmpty) {
+              setState(() {
+                _error = e.toString();
+                _isLoading = false;
+              });
+            }
+          }
+        } finally {
+          _isLoadingGrades = false;
+        }
+      } else {
+        if (mounted) {
+          if (_grades.isEmpty) {
+            setState(() {
+              _error = 'No data. Please connect network.';
+              _isLoading = false;
+            });
+          }
+        }
+        _isLoadingGrades = false;
+      }
+    } else {
+      if (mounted) {
+        if (_grades.isEmpty) {
+          setState(() {
+            _error = 'Not authenticated';
+            _isLoading = false;
+          });
+        }
+      }
+      _isLoadingGrades = false;
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    // ✅ Check và refresh khi có pending results mới (khi quay lại screen)
+    // Chỉ check một lần mỗi frame để tránh refresh quá nhiều
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || _isLoadingGrades) return;
+      final pendingCount = _getPendingCount();
+      if (pendingCount != _lastPendingCount) {
+        _lastPendingCount = pendingCount;
+        _loadGrades(); // Refresh để hiển thị papers mới
+      }
+    });
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Review Papers'),
@@ -80,186 +338,222 @@ class _ReviewPapersScreenState extends State<ReviewPapersScreen> {
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _error != null
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
+          ? Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.error_outline, size: 64, color: Colors.red[300]),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Error loading papers',
+                    style: TextStyle(fontSize: 18, color: Colors.grey[700]),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    _error!,
+                    style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 24),
+                  ElevatedButton.icon(
+                    onPressed: _loadGrades,
+                    icon: const Icon(Icons.refresh),
+                    label: const Text('Retry'),
+                  ),
+                ],
+              ),
+            )
+          : _grades.isEmpty
+          ? Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.description_outlined,
+                    size: 64,
+                    color: Colors.grey[400],
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'No papers found',
+                    style: TextStyle(fontSize: 18, color: Colors.grey[700]),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Scan some papers to see them here',
+                    style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                  ),
+                ],
+              ),
+            )
+          : Column(
+              children: [
+                // Summary card
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(16),
+                  color: const Color(0xFF2E7D32).withOpacity(0.1),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: [
-                      Icon(Icons.error_outline, size: 64, color: Colors.red[300]),
-                      const SizedBox(height: 16),
-                      Text(
-                        'Error loading papers',
-                        style: TextStyle(fontSize: 18, color: Colors.grey[700]),
+                      _buildSummaryItem(
+                        'Total Papers',
+                        _grades.length.toString(),
+                        Icons.description,
                       ),
-                      const SizedBox(height: 8),
-                      Text(
-                        _error!,
-                        style: TextStyle(fontSize: 14, color: Colors.grey[600]),
-                        textAlign: TextAlign.center,
+                      _buildSummaryItem(
+                        'Avg Score',
+                        _grades.isNotEmpty
+                            ? (_grades
+                                          .map((g) => g.score ?? 0)
+                                          .reduce((a, b) => a + b) /
+                                      _grades.length)
+                                  .toStringAsFixed(1)
+                            : '0.0',
+                        Icons.bar_chart,
                       ),
-                      const SizedBox(height: 24),
-                      ElevatedButton.icon(
-                        onPressed: _loadGrades,
-                        icon: const Icon(Icons.refresh),
-                        label: const Text('Retry'),
+                      _buildSummaryItem(
+                        'Avg %',
+                        _grades.isNotEmpty
+                            ? (_grades
+                                              .map((g) => g.percentage ?? 0)
+                                              .reduce((a, b) => a + b) /
+                                          _grades.length)
+                                      .toStringAsFixed(1) +
+                                  '%'
+                            : '0%',
+                        Icons.percent,
                       ),
                     ],
                   ),
-                )
-              : _grades.isEmpty
-                  ? Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.description_outlined, size: 64, color: Colors.grey[400]),
-                          const SizedBox(height: 16),
-                          Text(
-                            'No papers found',
-                            style: TextStyle(fontSize: 18, color: Colors.grey[700]),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            'Scan some papers to see them here',
-                            style: TextStyle(fontSize: 14, color: Colors.grey[600]),
-                          ),
-                        ],
-                      ),
-                    )
-                  : Column(
-                      children: [
-                        // Summary card
-                        Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.all(16),
-                          color: const Color(0xFF2E7D32).withOpacity(0.1),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceAround,
-                            children: [
-                              _buildSummaryItem(
-                                'Total Papers',
-                                _grades.length.toString(),
-                                Icons.description,
-                              ),
-                              _buildSummaryItem(
-                                'Avg Score',
-                                _grades.isNotEmpty
-                                    ? (_grades.map((g) => g.score ?? 0).reduce((a, b) => a + b) / _grades.length)
-                                        .toStringAsFixed(1)
-                                    : '0.0',
-                                Icons.bar_chart,
-                              ),
-                              _buildSummaryItem(
-                                'Avg %',
-                                _grades.isNotEmpty
-                                    ? (_grades.map((g) => g.percentage ?? 0).reduce((a, b) => a + b) / _grades.length)
-                                        .toStringAsFixed(1) + '%'
-                                    : '0%',
-                                Icons.percent,
-                              ),
-                            ],
-                          ),
+                ),
+                // Papers list
+                Expanded(
+                  child: ListView.builder(
+                    padding: const EdgeInsets.all(16),
+                    itemCount: _grades.length,
+                    itemBuilder: (context, index) {
+                      final grade = _grades[index];
+                      return Card(
+                        margin: const EdgeInsets.only(bottom: 12),
+                        elevation: 2,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
                         ),
-                        // Papers list
-                        Expanded(
-                          child: ListView.builder(
-                            padding: const EdgeInsets.all(16),
-                            itemCount: _grades.length,
-                            itemBuilder: (context, index) {
-                              final grade = _grades[index];
-                              return Card(
-                                margin: const EdgeInsets.only(bottom: 12),
-                                elevation: 2,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: ListTile(
-                                  contentPadding: const EdgeInsets.all(16),
-                                  leading: CircleAvatar(
-                                    backgroundColor: _getScoreColor(grade.percentage ?? 0),
+                        child: ListTile(
+                          contentPadding: const EdgeInsets.all(16),
+                          leading: CircleAvatar(
+                            backgroundColor: _getScoreColor(
+                              grade.percentage ?? 0,
+                            ),
+                            child: Text(
+                              '${grade.percentage?.toStringAsFixed(0) ?? 0}%',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ),
+                          title: Text(
+                            'Student ID: ${grade.studentId}',
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
+                          ),
+                          subtitle: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const SizedBox(height: 8),
+                              Row(
+                                children: [
+                                  Icon(
+                                    Icons.class_,
+                                    size: 16,
+                                    color: Colors.grey[600],
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Flexible(
                                     child: Text(
-                                      '${grade.percentage?.toStringAsFixed(0) ?? 0}%',
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.bold,
+                                      'Class: ${grade.classCode}',
+                                      style: TextStyle(color: Colors.grey[600]),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                  if (grade.versionCode != null) ...[
+                                    const SizedBox(width: 16),
+                                    Icon(
+                                      Icons.code,
+                                      size: 16,
+                                      color: Colors.grey[600],
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Flexible(
+                                      child: Text(
+                                        'Version: ${grade.versionCode}',
+                                        style: TextStyle(
+                                          color: Colors.grey[600],
+                                        ),
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                  ],
+                                ],
+                              ),
+                              const SizedBox(height: 4),
+                              Row(
+                                children: [
+                                  Icon(
+                                    Icons.check_circle,
+                                    size: 16,
+                                    color: Colors.green,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    'Score: ${grade.score?.toStringAsFixed(1) ?? 0}',
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              if (grade.scannedAt != null) ...[
+                                const SizedBox(height: 4),
+                                Row(
+                                  children: [
+                                    Icon(
+                                      Icons.access_time,
+                                      size: 16,
+                                      color: Colors.grey[600],
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      _formatDateTime(grade.scannedAt!),
+                                      style: TextStyle(
+                                        color: Colors.grey[600],
                                         fontSize: 12,
                                       ),
                                     ),
-                                  ),
-                                  title: Text(
-                                    'Student ID: ${grade.studentId}',
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 16,
-                                    ),
-                                  ),
-                                  subtitle: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      const SizedBox(height: 8),
-                                      Row(
-                                        children: [
-                                          Icon(Icons.class_, size: 16, color: Colors.grey[600]),
-                                          const SizedBox(width: 4),
-                                          Flexible(
-                                            child: Text(
-                                              'Class: ${grade.classCode}',
-                                              style: TextStyle(color: Colors.grey[600]),
-                                              overflow: TextOverflow.ellipsis,
-                                            ),
-                                          ),
-                                          if (grade.versionCode != null) ...[
-                                            const SizedBox(width: 16),
-                                            Icon(Icons.code, size: 16, color: Colors.grey[600]),
-                                            const SizedBox(width: 4),
-                                            Flexible(
-                                              child: Text(
-                                                'Version: ${grade.versionCode}',
-                                                style: TextStyle(color: Colors.grey[600]),
-                                                overflow: TextOverflow.ellipsis,
-                                              ),
-                                            ),
-                                          ],
-                                        ],
-                                      ),
-                                      const SizedBox(height: 4),
-                                      Row(
-                                        children: [
-                                          Icon(Icons.check_circle, size: 16, color: Colors.green),
-                                          const SizedBox(width: 4),
-                                          Text(
-                                            'Score: ${grade.score?.toStringAsFixed(1) ?? 0}',
-                                            style: const TextStyle(fontWeight: FontWeight.w500),
-                                          ),
-                                        ],
-                                      ),
-                                      if (grade.scannedAt != null) ...[
-                                        const SizedBox(height: 4),
-                                        Row(
-                                          children: [
-                                            Icon(Icons.access_time, size: 16, color: Colors.grey[600]),
-                                            const SizedBox(width: 4),
-                                            Text(
-                                              _formatDateTime(grade.scannedAt!),
-                                              style: TextStyle(
-                                                color: Colors.grey[600],
-                                                fontSize: 12,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ],
-                                    ],
-                                  ),
-                                  trailing: Icon(Icons.chevron_right, color: Colors.grey[400]),
-                                  onTap: () {
-                                    _showPaperDetail(grade);
-                                  },
+                                  ],
                                 ),
-                              );
-                            },
+                              ],
+                            ],
                           ),
+                          trailing: Icon(
+                            Icons.chevron_right,
+                            color: Colors.grey[400],
+                          ),
+                          onTap: () {
+                            _showPaperDetail(grade);
+                          },
                         ),
-                      ],
-                    ),
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
     );
   }
 
@@ -277,13 +571,7 @@ class _ReviewPapersScreenState extends State<ReviewPapersScreen> {
           ),
         ),
         const SizedBox(height: 4),
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 12,
-            color: Colors.grey[600],
-          ),
-        ),
+        Text(label, style: TextStyle(fontSize: 12, color: Colors.grey[600])),
       ],
     );
   }
@@ -350,18 +638,25 @@ class _ReviewPapersScreenState extends State<ReviewPapersScreen> {
                 _buildDetailRow('Class Code', grade.classCode),
                 if (grade.versionCode != null)
                   _buildDetailRow('Version Code', grade.versionCode!),
-                _buildDetailRow('Score', '${grade.score?.toStringAsFixed(1) ?? 0}'),
-                _buildDetailRow('Percentage', '${grade.percentage?.toStringAsFixed(1) ?? 0}%'),
+                _buildDetailRow(
+                  'Score',
+                  '${grade.score?.toStringAsFixed(1) ?? 0}',
+                ),
+                _buildDetailRow(
+                  'Percentage',
+                  '${grade.percentage?.toStringAsFixed(1) ?? 0}%',
+                ),
                 if (grade.scannedAt != null)
-                  _buildDetailRow('Scanned At', _formatDateTime(grade.scannedAt!)),
-                if (grade.annotatedImage != null && grade.annotatedImage!.isNotEmpty) ...[
+                  _buildDetailRow(
+                    'Scanned At',
+                    _formatDateTime(grade.scannedAt!),
+                  ),
+                if (grade.annotatedImage != null &&
+                    grade.annotatedImage!.isNotEmpty) ...[
                   const SizedBox(height: 24),
                   const Text(
                     'Annotated Image',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 12),
                   _buildAnnotatedImage(grade.annotatedImage!),
@@ -369,10 +664,7 @@ class _ReviewPapersScreenState extends State<ReviewPapersScreen> {
                 const SizedBox(height: 24),
                 const Text(
                   'Answers',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 12),
                 if (grade.answers.isEmpty)
@@ -418,9 +710,7 @@ class _ReviewPapersScreenState extends State<ReviewPapersScreen> {
           Expanded(
             child: Text(
               value,
-              style: const TextStyle(
-                fontWeight: FontWeight.w400,
-              ),
+              style: const TextStyle(fontWeight: FontWeight.w400),
             ),
           ),
         ],
@@ -439,7 +729,10 @@ class _ReviewPapersScreenState extends State<ReviewPapersScreen> {
             return const Center(child: CircularProgressIndicator());
           }
           if (snapshot.hasError || !snapshot.hasData) {
-            return const Text('Could not load image', style: TextStyle(color: Colors.red));
+            return const Text(
+              'Could not load image',
+              style: TextStyle(color: Colors.red),
+            );
           }
           return _buildImageFromBase64(snapshot.data!);
         },
@@ -466,7 +759,10 @@ class _ReviewPapersScreenState extends State<ReviewPapersScreen> {
             return const Center(child: CircularProgressIndicator());
           }
           if (snapshot.hasError || !snapshot.hasData) {
-            return const Text('Could not load image', style: TextStyle(color: Colors.red));
+            return const Text(
+              'Could not load image',
+              style: TextStyle(color: Colors.red),
+            );
           }
           return _buildImageFromBase64(snapshot.data!);
         },
@@ -492,14 +788,13 @@ class _ReviewPapersScreenState extends State<ReviewPapersScreen> {
       final bytes = base64Decode(base64String);
       return ClipRRect(
         borderRadius: BorderRadius.circular(12),
-        child: Image.memory(
-          bytes,
-          fit: BoxFit.contain,
-        ),
+        child: Image.memory(bytes, fit: BoxFit.contain),
       );
     } catch (e) {
-      return const Text('Could not display image', style: TextStyle(color: Colors.red));
+      return const Text(
+        'Could not display image',
+        style: TextStyle(color: Colors.red),
+      );
     }
   }
 }
-
