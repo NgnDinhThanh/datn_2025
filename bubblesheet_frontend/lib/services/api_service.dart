@@ -11,8 +11,8 @@ import '../mobile/login_screen.dart';
 class ApiService {
   // Danh sách IP cho mobile (thử theo thứ tự)
   static final List<String> _mobileBaseUrls = [
-    'http://192.168.99.114:8000/api',  // IP chính
-    'http://192.168.99.108:8000/api',  // IP phụ (thay đổi theo mạng của bạn)
+    'http://192.168.99.114:8000/api', // IP chính
+    'http://192.168.99.108:8000/api', // IP phụ (thay đổi theo mạng của bạn)
   ];
 
   // BaseUrl hiện tại đang sử dụng
@@ -41,10 +41,12 @@ class ApiService {
   static Future<bool> _testConnection(String baseUrl) async {
     try {
       final url = Uri.parse('$baseUrl/users/login/');
-      final response = await http.get(url).timeout(
-        const Duration(seconds: 3),
-        onTimeout: () => throw Exception('Connection timeout'),
-      );
+      final response = await http
+          .get(url)
+          .timeout(
+            const Duration(seconds: 3),
+            onTimeout: () => throw Exception('Connection timeout'),
+          );
       // Nếu có response (kể cả 405 Method Not Allowed) nghĩa là server đang chạy
       return response.statusCode != 0;
     } catch (e) {
@@ -75,8 +77,8 @@ class ApiService {
 
   // Thử kết nối lại với IP khác nếu request hiện tại fail
   static Future<http.Response> _retryWithFallback(
-      Future<http.Response> Function(String baseUrl) requestFn,
-      ) async {
+    Future<http.Response> Function(String baseUrl) requestFn,
+  ) async {
     // Thử với baseUrl hiện tại
     try {
       final response = await requestFn(baseUrl);
@@ -96,7 +98,9 @@ class ApiService {
     }
 
     // Nếu không tìm thấy IP nào, throw error
-    throw Exception('Cannot connect to server. Please check your network connection.');
+    throw Exception(
+      'Cannot connect to server. Please check your network connection.',
+    );
   }
 
   static void setContext(BuildContext context) {
@@ -108,7 +112,10 @@ class ApiService {
   }
 
   // Đăng nhập
-  static Future<Map<String, dynamic>> login(String email, String password) async {
+  static Future<Map<String, dynamic>> login(
+    String email,
+    String password,
+  ) async {
     final response = await _retryWithFallback((baseUrl) async {
       final url = Uri.parse('$baseUrl/users/login/');
       return await http.post(
@@ -121,13 +128,21 @@ class ApiService {
   }
 
   // Đăng ký
-  static Future<Map<String, dynamic>> register(String username, String email, String password) async {
+  static Future<Map<String, dynamic>> register(
+    String username,
+    String email,
+    String password,
+  ) async {
     final response = await _retryWithFallback((baseUrl) async {
       final url = Uri.parse('$baseUrl/users/');
       return await http.post(
         url,
         headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'username': username, 'email': email, 'password': password}),
+        body: jsonEncode({
+          'username': username,
+          'email': email,
+          'password': password,
+        }),
       );
     });
     return _processResponse(response);
@@ -168,7 +183,9 @@ class ApiService {
   }
 
   // Thêm mới sinh viên
-  static Future<Map<String, dynamic>> addStudent(Map<String, dynamic> data) async {
+  static Future<Map<String, dynamic>> addStudent(
+    Map<String, dynamic> data,
+  ) async {
     final response = await _retryWithFallback((baseUrl) async {
       return await http.post(
         Uri.parse('$baseUrl/students/'),
@@ -210,7 +227,7 @@ class ApiService {
         if (_context!.mounted) {
           Navigator.of(_context!).pushAndRemoveUntil(
             MaterialPageRoute(builder: (_) => const LoginScreen()),
-                (route) => false,
+            (route) => false,
           );
         }
       }

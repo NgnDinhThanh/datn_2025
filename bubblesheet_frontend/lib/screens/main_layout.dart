@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
 import 'package:go_router/go_router.dart';
@@ -207,6 +208,44 @@ class _MenuItem extends StatelessWidget {
   }
 }
 
+// Logo Widget với click handler để navigate đến account
+class AppLogoWidget extends StatelessWidget {
+  const AppLogoWidget({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      child: InkWell(
+        onTap: () {
+          // Navigate đến trang account khi click vào logo
+          GoRouter.of(context).go('/user');
+        },
+        borderRadius: BorderRadius.circular(8),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+          child: Image.asset(
+            'images/logo.png',
+            height: 50, // Điều chỉnh chiều cao logo
+            fit: BoxFit.contain,
+            errorBuilder: (context, error, stackTrace) {
+              // Fallback nếu không tìm thấy ảnh
+              return const Text(
+                'BubbleSheet',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
+              );
+            },
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class MainLayout extends StatelessWidget {
   final Widget child;
 
@@ -255,15 +294,15 @@ class MainLayout extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Padding(
-          padding: EdgeInsets.only(left: 80.0),
-          child: Text("BubbleSheet"),
+          padding: EdgeInsets.only(left: 160.0),
+          child: AppLogoWidget(),
         ),
         titleSpacing: 0, // Disable default title spacing để control padding bằng Padding widget
         actions: [
           // User Menu với hover behavior
           UserMenuWidget(currentUser: currentUser),
         ],
-        actionsPadding: const EdgeInsets.only(right: 80.0), // Padding cho actions (bên phải)
+        actionsPadding: const EdgeInsets.only(right: 160.0), // Padding cho actions (bên phải)
         backgroundColor: Colors.white,
         foregroundColor: Colors.black87,
         elevation: 1,

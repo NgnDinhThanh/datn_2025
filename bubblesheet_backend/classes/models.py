@@ -44,12 +44,22 @@ class Class(Document):
                 if not student:
                     raise ValidationError(f"Student with id {student_id} not found")
         
-        # Validate exam_ids if provided
+        # Validate and clean up exam_ids - remove invalid ones instead of raising error
         if self.exam_ids:
+            valid_exam_ids = []
+            invalid_exam_ids = []
             for exam_id in self.exam_ids:
                 exam = Exam.objects(id=exam_id).first()
-                if not exam:
-                    raise ValidationError(f"Exam with id {exam_id} not found")
+                if exam:
+                    valid_exam_ids.append(exam_id)
+                else:
+                    invalid_exam_ids.append(exam_id)
+            # Update exam_ids to only include valid ones
+            if invalid_exam_ids:
+                import logging
+                logger = logging.getLogger(__name__)
+                logger.warning(f"Class {self.class_code}: Removed {len(invalid_exam_ids)} invalid exam_ids: {invalid_exam_ids}")
+            self.exam_ids = valid_exam_ids
         
         # Update student_count
         self.student_count = len(self.student_ids)

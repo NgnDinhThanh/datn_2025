@@ -54,7 +54,6 @@ class SyncService {
 
       // Xóa các kết quả đã sync thành công
       await GradingResultQueueService.clearSyncedResults();
-
     } finally {
       _isSyncing = false;
     }
@@ -66,33 +65,40 @@ class SyncService {
   }
 
   /// Upload một kết quả lên server
-  static Future<bool> _uploadResult(Map<String, dynamic> data, String token) async {
+  static Future<bool> _uploadResult(
+    Map<String, dynamic> data,
+    String token,
+  ) async {
     try {
       final uri = Uri.parse('${ApiService.baseUrl}/grading/save-grade/');
 
-      final response = await http.post(
-        uri,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
-        body: jsonEncode({
-          'quiz_id': data['quizId'],
-          'class_id': data['classId'],
-          'student_id': data['studentId'],
-          'version_code': data['versionCode'],
-          'answersheet_id': data['answersheetId'],
-          'score': data['score'],
-          'percentage': data['percentage'],
-          'answers': data['answers'],
-        }),
-      ).timeout(const Duration(seconds: 10));
+      final response = await http
+          .post(
+            uri,
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer $token',
+            },
+            body: jsonEncode({
+              'quiz_id': data['quizId'],
+              'class_id': data['classId'],
+              'student_id': data['studentId'],
+              'version_code': data['versionCode'],
+              'answersheet_id': data['answersheetId'],
+              'score': data['score'],
+              'percentage': data['percentage'],
+              'answers': data['answers'],
+            }),
+          )
+          .timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         print('[Sync] Uploaded successfully: ${data['studentId']}');
         return true;
       } else {
-        print('[Sync] Upload failed: ${response.statusCode} - ${response.body}');
+        print(
+          '[Sync] Upload failed: ${response.statusCode} - ${response.body}',
+        );
         return false;
       }
     } catch (e) {

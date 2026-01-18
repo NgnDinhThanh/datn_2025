@@ -6,6 +6,7 @@ from rest_framework.decorators import api_view
 from classes.models import Class
 from classes.serializer import ClassSerializer
 from exams.models import Exam
+from grading.models import Grade
 from students.models import Student
 from users.models import User
 import logging
@@ -14,6 +15,7 @@ import json
 import sys
 from bson import ObjectId
 import os
+from mongoengine import ValidationError
 
 # Set up file logging
 log_file = 'debug.log'
@@ -281,8 +283,21 @@ class ClassDetailView(APIView):
                         if student.teacher_id == request.user.id:  # Kiểm tra student có thuộc về teacher không
                             if class_obj.id not in student.class_codes:
                                 student.class_codes.append(class_obj.id)
-                                student.save()
-                                logger.info(f"Added class {class_obj.class_code} to student {student.student_id}")
+                                try:
+                                    student.save()
+                                    logger.info(f"Added class {class_obj.class_code} to student {student.student_id}")
+                                except ValidationError as ve:
+                                    # Rollback: Xóa class_id vừa thêm
+                                    if class_obj.id in student.class_codes:
+                                        student.class_codes.remove(class_obj.id)
+                                    logger.error(f"Validation error saving student {student.student_id}: {str(ve)}")
+                                    # Không throw, chỉ log và tiếp tục
+                        else:
+                            logger.warning(f"Student {student.student_id} belongs to different teacher")
+                    except Student.DoesNotExist:
+                        logger.error(f"Student not found: {student_id}")
+                    except ValidationError as ve:
+                        logger.error(f"Validation error for student {student_id}: {str(ve)}")
                     except Exception as e:
                         logger.error(f"Error adding student to class {student_id}: {str(e)}")
 
@@ -293,8 +308,19 @@ class ClassDetailView(APIView):
                         student = Student.objects.get(id=student_id)
                         if class_obj.id in student.class_codes:
                             student.class_codes.remove(class_obj.id)
-                            student.save()
-                            logger.info(f"Removed class {class_obj.class_code} from student {student.student_id}")
+                            try:
+                                student.save()
+                                logger.info(f"Removed class {class_obj.class_code} from student {student.student_id}")
+                            except ValidationError as ve:
+                                # Rollback: Thêm lại class_id
+                                if class_obj.id not in student.class_codes:
+                                    student.class_codes.append(class_obj.id)
+                                logger.error(f"Validation error saving student {student.student_id}: {str(ve)}")
+                                # Không throw, chỉ log và tiếp tục
+                    except Student.DoesNotExist:
+                        logger.error(f"Student not found: {student_id}")
+                    except ValidationError as ve:
+                        logger.error(f"Validation error for student {student_id}: {str(ve)}")
                     except Exception as e:
                         logger.error(f"Error removing class from student {student_id}: {str(e)}")
 
@@ -305,14 +331,18 @@ class ClassDetailView(APIView):
             # Cập nhật thông tin class
             if 'class_name' in request.data:
                 class_obj.class_name = request.data['class_name']
-                # Cập nhật lại class_codes của sinh viên trong lớp này
-                for student_id in class_obj.student_ids:
-                    student = Student.objects.get(id=student_id)
-                    if class_obj.id in student.class_codes:
-                        student.save()  # Lưu lại để cập nhật thông tin lớp học
+                # ❌ Đã xóa đoạn code không cần thiết (dòng 309-312)
+                # Không cần loop qua student_ids khi chỉ update class_name
 
-            class_obj.save()
-            logger.info(f"Updated class {class_obj.class_code}")
+            try:
+                class_obj.save()
+                logger.info(f"Updated class {class_obj.class_code}")
+            except ValidationError as ve:
+                logger.error(f"Validation error saving class {class_obj.class_code}: {str(ve)}")
+                return Response(
+                    {'error': f'Validation error: {str(ve)}'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
 
             # Serialize để trả về response
             serializer = ClassSerializer(class_obj)
@@ -367,5 +397,107 @@ class ClassDetailView(APIView):
             logger.error(f"Error in delete class: {str(e)}")
             return Response(
                 {"error": "Failed to delete class"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+
+class ClassGradeBookView(APIView):
+    """
+    Get gradebook data for a specific class.
+    Returns students, exams, and grades in a structured format.
+    """
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, class_code):
+        try:
+            # Get class object
+            try:
+                class_obj = Class.objects.get(class_code=class_code)
+            except Class.DoesNotExist:
+                return Response(
+                    {"error": "Class not found"},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+
+            # Check permissions
+            if not (request.user.is_teacher and request.user.id == class_obj.teacher_id or
+                    request.user.id in class_obj.student_ids):
+                return Response(
+                    {"error": "You don't have permission to view this class"},
+                    status=status.HTTP_403_FORBIDDEN
+                )
+
+            # Get students for this class
+            students_data = []
+            if class_obj.student_ids:
+                students = Student.objects(id__in=class_obj.student_ids)
+                for student in students:
+                    students_data.append({
+                        'id': str(student.id),
+                        'student_id': student.student_id,
+                        'name': f"{student.first_name} {student.last_name}".strip(),
+                        'first_name': student.first_name,
+                        'last_name': student.last_name,
+                    })
+
+            # Sort students by student_id
+            students_data.sort(key=lambda x: x['student_id'])
+
+            # Get exams for this class
+            exams_data = []
+            if class_obj.exam_ids:
+                exams = Exam.objects(id__in=class_obj.exam_ids)
+                for exam in exams:
+                    exams_data.append({
+                        'id': str(exam.id),
+                        'name': exam.name,
+                        'date': exam.date,
+                    })
+
+            # Sort exams by date (newest first) or name
+            exams_data.sort(key=lambda x: (x['date'], x['name']), reverse=True)
+
+            # Get all grades for this class
+            grades = Grade.objects(
+                class_code=class_code,
+                teacher_id=request.user.id
+            )
+
+            # Create a map: "student_id_exam_id" -> {score, percentage, scanned_at_datetime}
+            # We store datetime objects temporarily for comparison, then convert to ISO format later
+            grades_map_temp = {}
+            for grade in grades:
+                key = f"{grade.student_id}_{grade.exam_id}"
+                # If multiple grades exist for same student-exam pair, keep the latest (by scanned_at)
+                if key not in grades_map_temp:
+                    grades_map_temp[key] = grade
+                elif grade.scanned_at and (not grades_map_temp[key].scanned_at or grade.scanned_at > grades_map_temp[key].scanned_at):
+                    grades_map_temp[key] = grade
+            
+            # Convert to final format with ISO string dates
+            grades_map = {}
+            for key, grade in grades_map_temp.items():
+                grades_map[key] = {
+                    'score': grade.score,
+                    'percentage': grade.percentage,
+                    'scanned_at': grade.scanned_at.isoformat() if grade.scanned_at else None,
+                }
+
+            # Build response
+            response_data = {
+                'class_code': class_obj.class_code,
+                'class_name': class_obj.class_name,
+                'students': students_data,
+                'exams': exams_data,
+                'grades': grades_map,
+            }
+
+            logger.info(f"Gradebook data retrieved for class {class_code}: {len(students_data)} students, {len(exams_data)} exams, {len(grades_map)} grade entries")
+            return Response(response_data)
+
+        except Exception as e:
+            logger.error(f"Error in get gradebook for class {class_code}: {str(e)}\n{traceback.format_exc()}")
+            return Response(
+                {"error": "Failed to retrieve gradebook data", "detail": str(e)},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )

@@ -20,10 +20,16 @@ class StudentService {
     }
   }
 
-  static Future<Map<String, dynamic>> addStudent(Map<String, dynamic> data, String? token) async {
+  static Future<Map<String, dynamic>> addStudent(
+    Map<String, dynamic> data,
+    String? token,
+  ) async {
     final response = await http.post(
       Uri.parse('${ApiService.baseUrl}/students/'),
-      headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer $token'},
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
       body: jsonEncode(data),
     );
     checkAuthError(response.statusCode, response.body);
@@ -41,8 +47,15 @@ class StudentService {
     return result;
   }
 
-  static Future<Map<String, dynamic>> importStudents(String filePath, bool hasHeader, String? token) async {
-    var request = http.MultipartRequest('POST', Uri.parse('${ApiService.baseUrl}/students/import/'));
+  static Future<Map<String, dynamic>> importStudents(
+    String filePath,
+    bool hasHeader,
+    String? token,
+  ) async {
+    var request = http.MultipartRequest(
+      'POST',
+      Uri.parse('${ApiService.baseUrl}/students/import/'),
+    );
     request.headers['Authorization'] = 'Bearer $token';
     request.files.add(await http.MultipartFile.fromPath('file', filePath));
     request.fields['has_header'] = hasHeader ? 'true' : 'false';
@@ -59,7 +72,10 @@ class StudentService {
     return result;
   }
 
-  static Future<Student> fetchStudentById(String studentId, String? token) async {
+  static Future<Student> fetchStudentById(
+    String studentId,
+    String? token,
+  ) async {
     final response = await http.get(
       Uri.parse('${ApiService.baseUrl}/students/$studentId/'),
       headers: {'Authorization': 'Bearer $token'},
@@ -73,15 +89,24 @@ class StudentService {
     }
   }
 
-  static Future<void> updateStudent(String studentId, Map<String, dynamic> data, String? token) async {
+  static Future<void> updateStudent(
+    String studentId,
+    Map<String, dynamic> data,
+    String? token,
+  ) async {
     final response = await http.put(
       Uri.parse('${ApiService.baseUrl}/students/$studentId/'),
-      headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer $token'},
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
       body: jsonEncode(data),
     );
     checkAuthError(response.statusCode, response.body);
     if (response.statusCode != 200) {
-      throw Exception('Failed to update student: Status ${response.statusCode}');
+      throw Exception(
+        'Failed to update student: Status ${response.statusCode}',
+      );
     }
   }
 
@@ -92,7 +117,9 @@ class StudentService {
     );
     checkAuthError(response.statusCode, response.body);
     if (response.statusCode != 204) {
-      throw Exception('Failed to delete student: Status ${response.statusCode}');
+      throw Exception(
+        'Failed to delete student: Status ${response.statusCode}',
+      );
     }
   }
-} 
+}

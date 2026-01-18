@@ -426,7 +426,7 @@ class _ClassListScreenState extends State<ClassListScreen> {
                                     icon: const Icon(Icons.assignment),
                                     tooltip: 'Grade Book Report',
                                     onPressed: () {
-                                      // TODO: Navigate to grade book report
+                                      context.go('/classes/${classItem.class_code}/gradebook');
                                     },
                                   ),
                                 ),

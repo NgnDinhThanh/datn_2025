@@ -91,14 +91,17 @@ class StudentProvider with ChangeNotifier {
         if (type == 'CREATE') {
           // Thêm student mới (nếu chưa có)
           final studentId = data['student_id'] as String? ?? '';
-          if (studentId.isNotEmpty && !_students.any((s) => s.studentId == studentId)) {
-            _students.add(Student(
-              id: 'temp_${DateTime.now().millisecondsSinceEpoch}',
-              studentId: studentId,
-              firstName: data['first_name'] ?? '',
-              lastName: data['last_name'] ?? '',
-              classCodes: List<String>.from(data['class_codes'] ?? []),
-            ));
+          if (studentId.isNotEmpty &&
+              !_students.any((s) => s.studentId == studentId)) {
+            _students.add(
+              Student(
+                id: 'temp_${DateTime.now().millisecondsSinceEpoch}',
+                studentId: studentId,
+                firstName: data['first_name'] ?? '',
+                lastName: data['last_name'] ?? '',
+                classCodes: List<String>.from(data['class_codes'] ?? []),
+              ),
+            );
           }
         } else if (type == 'UPDATE' && entityId != null) {
           // Cập nhật student
@@ -109,7 +112,9 @@ class StudentProvider with ChangeNotifier {
               studentId: entityId,
               firstName: data['first_name'] ?? _students[index].firstName,
               lastName: data['last_name'] ?? _students[index].lastName,
-              classCodes: List<String>.from(data['class_codes'] ?? _students[index].classCodes),
+              classCodes: List<String>.from(
+                data['class_codes'] ?? _students[index].classCodes,
+              ),
             );
           }
         } else if (type == 'DELETE' && entityId != null) {
@@ -149,13 +154,15 @@ class StudentProvider with ChangeNotifier {
           data: studentData,
         );
         // Optimistic UI: Add vào local list
-        _students.add(Student(
-          id: 'temp_${DateTime.now().millisecondsSinceEpoch}',
-          studentId: studentData['student_id'] ?? '',
-          firstName: studentData['first_name'] ?? '',
-          lastName: studentData['last_name'] ?? '',
-          classCodes: List<String>.from(studentData['class_codes'] ?? []),
-        ));
+        _students.add(
+          Student(
+            id: 'temp_${DateTime.now().millisecondsSinceEpoch}',
+            studentId: studentData['student_id'] ?? '',
+            firstName: studentData['first_name'] ?? '',
+            lastName: studentData['last_name'] ?? '',
+            classCodes: List<String>.from(studentData['class_codes'] ?? []),
+          ),
+        );
         notifyListeners();
         return {'id': 'temp_${DateTime.now().millisecondsSinceEpoch}'};
       }
@@ -168,13 +175,15 @@ class StudentProvider with ChangeNotifier {
         data: studentData,
       );
       // Optimistic UI: Add vào local list
-      _students.add(Student(
-        id: 'temp_${DateTime.now().millisecondsSinceEpoch}',
-        studentId: studentData['student_id'] ?? '',
-        firstName: studentData['first_name'] ?? '',
-        lastName: studentData['last_name'] ?? '',
-        classCodes: List<String>.from(studentData['class_codes'] ?? []),
-      ));
+      _students.add(
+        Student(
+          id: 'temp_${DateTime.now().millisecondsSinceEpoch}',
+          studentId: studentData['student_id'] ?? '',
+          firstName: studentData['first_name'] ?? '',
+          lastName: studentData['last_name'] ?? '',
+          classCodes: List<String>.from(studentData['class_codes'] ?? []),
+        ),
+      );
       notifyListeners();
       return {'id': 'temp_${DateTime.now().millisecondsSinceEpoch}'};
     }
@@ -222,7 +231,9 @@ class StudentProvider with ChangeNotifier {
             studentId: studentId,
             firstName: data['first_name'] ?? _students[index].firstName,
             lastName: data['last_name'] ?? _students[index].lastName,
-            classCodes: List<String>.from(data['class_codes'] ?? _students[index].classCodes),
+            classCodes: List<String>.from(
+              data['class_codes'] ?? _students[index].classCodes,
+            ),
           );
           notifyListeners();
         }
@@ -243,7 +254,9 @@ class StudentProvider with ChangeNotifier {
           studentId: studentId,
           firstName: data['first_name'] ?? _students[index].firstName,
           lastName: data['last_name'] ?? _students[index].lastName,
-          classCodes: List<String>.from(data['class_codes'] ?? _students[index].classCodes),
+          classCodes: List<String>.from(
+            data['class_codes'] ?? _students[index].classCodes,
+          ),
         );
         notifyListeners();
       }

@@ -97,16 +97,20 @@ class ClassProvider with ChangeNotifier {
         if (type == 'CREATE') {
           // Thêm class mới (nếu chưa có - check theo class_code để tránh duplicate)
           final classCode = data['class_code'] as String? ?? '';
-          if (classCode.isNotEmpty && !_classes.any((c) => c.class_code == classCode)) {
-            _classes.add(ClassModel(
-              id: 'temp_${DateTime.now().millisecondsSinceEpoch}',
-              class_code: classCode,
-              class_name: data['class_name'] ?? '',
-              student_count: 0,
-              teacher_id: '', // Server sẽ tự động set từ token
-              exam_ids: [],
-              student_ids: [],
-            ));
+          if (classCode.isNotEmpty &&
+              !_classes.any((c) => c.class_code == classCode)) {
+            _classes.add(
+              ClassModel(
+                id: 'temp_${DateTime.now().millisecondsSinceEpoch}',
+                class_code: classCode,
+                class_name: data['class_name'] ?? '',
+                student_count: 0,
+                teacher_id: '',
+                // Server sẽ tự động set từ token
+                exam_ids: [],
+                student_ids: [],
+              ),
+            );
           }
         } else if (type == 'UPDATE' && entityId != null) {
           // Cập nhật class
@@ -158,15 +162,18 @@ class ClassProvider with ChangeNotifier {
           data: classData,
         );
         // Optimistic UI: Add vào local list
-        _classes.add(ClassModel(
-          id: 'temp_${DateTime.now().millisecondsSinceEpoch}',
-          class_code: classData['class_code'] ?? '',
-          class_name: classData['class_name'] ?? '',
-          student_count: 0,
-          teacher_id: '', // Server sẽ tự động set từ token
-          exam_ids: [],
-          student_ids: [],
-        ));
+        _classes.add(
+          ClassModel(
+            id: 'temp_${DateTime.now().millisecondsSinceEpoch}',
+            class_code: classData['class_code'] ?? '',
+            class_name: classData['class_name'] ?? '',
+            student_count: 0,
+            teacher_id: '',
+            // Server sẽ tự động set từ token
+            exam_ids: [],
+            student_ids: [],
+          ),
+        );
         notifyListeners();
       }
     } else {
@@ -178,15 +185,18 @@ class ClassProvider with ChangeNotifier {
         data: classData,
       );
       // Optimistic UI: Add vào local list
-      _classes.add(ClassModel(
-        id: 'temp_${DateTime.now().millisecondsSinceEpoch}',
-        class_code: classData['class_code'] ?? '',
-        class_name: classData['class_name'] ?? '',
-        student_count: 0,
-        teacher_id: '', // Server sẽ tự động set từ token
-        exam_ids: [],
-        student_ids: [],
-      ));
+      _classes.add(
+        ClassModel(
+          id: 'temp_${DateTime.now().millisecondsSinceEpoch}',
+          class_code: classData['class_code'] ?? '',
+          class_name: classData['class_name'] ?? '',
+          student_count: 0,
+          teacher_id: '',
+          // Server sẽ tự động set từ token
+          exam_ids: [],
+          student_ids: [],
+        ),
+      );
       notifyListeners();
     }
   }

@@ -11,35 +11,41 @@ class ClassService {
     if (token != null && token.isNotEmpty) {
       headers['Authorization'] = 'Bearer $token';
     }
-    
+
     try {
-      final response = await http.get(
-        Uri.parse(url),
-        headers: headers,
-      ).timeout(
-        const Duration(seconds: 10),
-        onTimeout: () {
-          throw Exception('Connection timeout');
-        },
-      );
-      
+      final response = await http
+          .get(Uri.parse(url), headers: headers)
+          .timeout(
+            const Duration(seconds: 10),
+            onTimeout: () {
+              throw Exception('Connection timeout');
+            },
+          );
+
       checkAuthError(response.statusCode, response.body);
-      
+
       if (response.statusCode == 200) {
         final List<dynamic> data = json.decode(response.body);
         return data.map((json) => ClassModel.fromJson(json)).toList();
       } else {
-        throw Exception('Failed to load classes: Status ${response.statusCode}');
+        throw Exception(
+          'Failed to load classes: Status ${response.statusCode}',
+        );
       }
     } catch (e) {
-      if (e.toString().contains('SocketException') || e.toString().contains('Connection') || e.toString().contains('timed out')) {
+      if (e.toString().contains('SocketException') ||
+          e.toString().contains('Connection') ||
+          e.toString().contains('timed out')) {
         throw Exception('Connection error: Could not connect to backend');
       }
       rethrow;
     }
   }
 
-  static Future<Map<String, dynamic>> createClass(Map<String, dynamic> classData, String? token) async {
+  static Future<Map<String, dynamic>> createClass(
+    Map<String, dynamic> classData,
+    String? token,
+  ) async {
     final response = await http.post(
       Uri.parse('${ApiService.baseUrl}/classes/'),
       headers: {
@@ -55,7 +61,11 @@ class ClassService {
     throw Exception('Failed to create class: Status ${response.statusCode}');
   }
 
-  static Future<Map<String, dynamic>> updateClass(String classId, Map<String, dynamic> classData, String? token) async {
+  static Future<Map<String, dynamic>> updateClass(
+    String classId,
+    Map<String, dynamic> classData,
+    String? token,
+  ) async {
     final response = await http.put(
       Uri.parse('${ApiService.baseUrl}/classes/$classId/'),
       headers: {
@@ -82,7 +92,10 @@ class ClassService {
     }
   }
 
-  static Future<ClassModel> getClassDetail(String classId, String? token) async {
+  static Future<ClassModel> getClassDetail(
+    String classId,
+    String? token,
+  ) async {
     final response = await http.get(
       Uri.parse('${ApiService.baseUrl}/classes/$classId/'),
       headers: {'Authorization': 'Bearer $token'},
@@ -92,6 +105,8 @@ class ClassService {
       final data = json.decode(response.body);
       return ClassModel.fromJson(data);
     }
-    throw Exception('Failed to fetch class detail: Status ${response.statusCode}');
+    throw Exception(
+      'Failed to fetch class detail: Status ${response.statusCode}',
+    );
   }
-} 
+}

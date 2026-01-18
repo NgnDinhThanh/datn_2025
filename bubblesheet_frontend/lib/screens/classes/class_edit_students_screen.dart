@@ -72,7 +72,7 @@ class _ClassEditStudentsScreenState extends State<ClassEditStudentsScreen> {
     try {
       final token = Provider.of<AuthProvider>(context, listen: false).token;
       await ClassService.updateClass(widget.classCode, {
-        'student_ids': _classRoster.map((s) => s.studentId).toList(),
+        'student_ids': _classRoster.map((s) => s.id).toList(),
       }, token);
       await Provider.of<ClassProvider>(context, listen: false).fetchClasses(context);
       if (mounted) context.go('/classes');
