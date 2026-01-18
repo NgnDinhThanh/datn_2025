@@ -15,6 +15,8 @@ from openpyxl.utils import get_column_letter
 from classes.models import Class
 from students.models import Student
 from students.serializers import StudentSerializer
+from grading.models import Grade
+from exams.models import Exam
 
 # Set up logging
 logger = logging.getLogger(__name__)
@@ -468,3 +470,104 @@ class StudentExportExcelView(APIView):
         response = HttpResponse(output, content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
         response['Content-Disposition'] = 'attachment; filename=students.xlsx'
         return response
+
+
+class StudentDetailWithPapersView(APIView):
+    """
+    Get detailed student information including all graded papers/quizzes.
+    Similar to Grade Book but for individual student.
+    """
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, student_id):
+        try:
+            # Get student object
+            try:
+                student = Student.objects.get(student_id=student_id)
+            except Student.DoesNotExist:
+                return Response(
+                    {"error": "Student not found"},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+
+            # Check permissions
+            if not (request.user.is_teacher and request.user.id == student.teacher_id):
+                return Response(
+                    {"error": "You don't have permission to view this student"},
+                    status=status.HTTP_403_FORBIDDEN
+                )
+
+            # Get class information for this student
+            classes_data = []
+            if student.class_codes:
+                classes = Class.objects(id__in=student.class_codes)
+                for class_obj in classes:
+                    classes_data.append({
+                        'id': str(class_obj.id),
+                        'class_code': class_obj.class_code,
+                        'class_name': class_obj.class_name,
+                    })
+
+            # Get all grades for this student
+            grades = Grade.objects(
+                student_id=student_id,
+                teacher_id=request.user.id
+            ).order_by('-scanned_at')
+
+            # Build graded papers list with exam and class info
+            graded_papers = []
+            for grade in grades:
+                # Get exam info
+                exam = None
+                exam_name = None
+                exam_date = None
+                try:
+                    exam = Exam.objects.get(id=grade.exam_id)
+                    exam_name = exam.name
+                    exam_date = exam.date
+                except Exam.DoesNotExist:
+                    exam_name = grade.exam_id  # Fallback to exam_id if exam not found
+                    exam_date = None
+
+                # Get class info
+                class_name = None
+                try:
+                    class_obj = Class.objects.get(class_code=grade.class_code)
+                    class_name = class_obj.class_name
+                except Class.DoesNotExist:
+                    class_name = grade.class_code  # Fallback to class_code if class not found
+
+                graded_papers.append({
+                    'grade_id': str(grade.id),
+                    'class_code': grade.class_code,
+                    'class_name': class_name,
+                    'exam_id': grade.exam_id,
+                    'exam_name': exam_name,
+                    'exam_date': exam_date,
+                    'score': grade.score,
+                    'percentage': grade.percentage,
+                    'version_code': grade.version_code,  # This is the "Key" field
+                    'scanned_at': grade.scanned_at.isoformat() if grade.scanned_at else None,
+                })
+
+            # Build response
+            response_data = {
+                'student_id': student.student_id,
+                'first_name': student.first_name,
+                'last_name': student.last_name,
+                'full_name': f"{student.first_name} {student.last_name}".strip(),
+                'teacher_id': str(student.teacher_id),
+                'classes': classes_data,  # List of classes with code and name
+                'graded_papers': graded_papers,  # List of all graded papers
+            }
+
+            logger.info(f"Student detail retrieved for {student_id}: {len(classes_data)} classes, {len(graded_papers)} graded papers")
+            return Response(response_data)
+
+        except Exception as e:
+            logger.error(f"Error in get student detail with papers for {student_id}: {str(e)}")
+            import traceback
+            return Response(
+                {"error": "Failed to retrieve student detail", "detail": str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )

@@ -505,9 +505,10 @@ class _StudentListScreenState extends State<StudentListScreen> {
                                   verticalAlignment: TableCellVerticalAlignment.middle,
                                   child: Center(
                                         child: IconButton(
-                                      icon: const Icon(Icons.file_copy_outlined),
+                                      icon: const Icon(Icons.assignment),
+                                          tooltip: 'View Student Detail & Papers',
                                           onPressed: () {
-                                            // TODO: Navigate to grade book report
+                                            context.go('/students/${studentItem.studentId}/detail');
                                           },
                                         ),
                                       ),

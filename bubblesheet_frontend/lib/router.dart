@@ -24,6 +24,7 @@ import 'screens/classes/class_edit_students_screen.dart';
 import 'screens/classes/class_gradebook_screen.dart';
 import 'screens/students/student_form_screen.dart';
 import 'screens/students/student_import_screen.dart';
+import 'screens/students/student_detail_screen.dart';
 import 'screens/answer_sheets/answer_sheet_list_screen.dart';
 import 'screens/answer_sheets/answer_sheet_form_name_screen.dart';
 import 'screens/answer_sheets/answer_sheet_form_header_screen.dart';
@@ -105,6 +106,14 @@ class BubbleSheetApp extends StatelessWidget {
           path: '/students/importStudent',
           builder: (context, state) => const MainLayout(child: StudentImportScreen()),
         ),
+        // Route cụ thể phải được định nghĩa TRƯỚC route tổng quát
+        GoRoute(
+          path: '/students/:id/detail',
+          builder: (context, state) => MainLayout(
+            child: StudentDetailScreen(studentId: state.pathParameters['id']!),
+          ),
+        ),
+        // Route tổng quát phải được định nghĩa SAU các route cụ thể
         GoRoute(
           path: '/students/:id',
           builder: (context, state) => MainLayout(

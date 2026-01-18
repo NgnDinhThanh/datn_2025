@@ -13,6 +13,10 @@ logger = logging.getLogger(__name__)
 
 from users.models import User
 from users.serializers import UserSerializer
+from classes.models import Class
+from students.models import Student
+from exams.models import Exam
+from grading.models import Grade
 
 @api_view(['GET'])
 @permission_classes([AllowAny])
@@ -135,3 +139,54 @@ class UserDetailView(APIView):
             return Response({'error': 'Not found'}, status=404)
         user_obj.delete()
         return Response(status=204)
+
+
+class CurrentUserProfileView(APIView):
+    """
+    Get current logged-in user's profile information and statistics.
+    """
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        try:
+            user = request.user
+            
+            # Get statistics for teacher
+            stats = {
+                'total_classes': 0,
+                'total_students': 0,
+                'total_quizzes': 0,
+                'total_graded_papers': 0,
+            }
+            
+            if user.is_teacher:
+                # Count classes
+                stats['total_classes'] = Class.objects(teacher_id=user.id).count()
+                
+                # Count students
+                stats['total_students'] = Student.objects(teacher_id=user.id).count()
+                
+                # Count quizzes/exams
+                stats['total_quizzes'] = Exam.objects(teacher_id=user.id).count()
+                
+                # Count graded papers
+                stats['total_graded_papers'] = Grade.objects(teacher_id=user.id).count()
+            
+            # Build response
+            response_data = {
+                'id': str(user.id),
+                'username': user.username,
+                'email': user.email,
+                'is_teacher': user.is_teacher,
+                'statistics': stats,
+            }
+            
+            logger.info(f"Profile data retrieved for user {user.username}")
+            return Response(response_data)
+
+        except Exception as e:
+            logger.error(f"Error in get current user profile: {str(e)}\n{traceback.format_exc()}")
+            return Response(
+                {"error": "Failed to retrieve user profile", "detail": str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
