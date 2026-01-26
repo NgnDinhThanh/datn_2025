@@ -1,3 +1,4 @@
+import 'package:bubblesheet_frontend/widgets/app_footer.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -6,7 +7,6 @@ import 'package:go_router/go_router.dart';
 import '../services/api_service.dart';
 import 'dart:async';
 
-// User Menu Widget với hover behavior
 class UserMenuWidget extends StatefulWidget {
   final String currentUser;
 
@@ -21,19 +21,18 @@ class _UserMenuWidgetState extends State<UserMenuWidget> {
   OverlayEntry? _overlayEntry;
   Timer? _hideTimer;
 
-  // Hàm hiển thị menu
+  // show menu
   void _showMenu() {
-    // Cancel timer nếu có
     _hideTimer?.cancel();
     _hideTimer = null;
-    
-    if (_overlayEntry != null) return; // Menu đã mở
-    
+
+    if (_overlayEntry != null) return;
+
     _overlayEntry = _createOverlayEntry();
     Overlay.of(context).insert(_overlayEntry!);
   }
 
-  // Hàm ẩn menu với delay
+  // hide menu with delay
   void _hideMenu({Duration delay = const Duration(milliseconds: 150)}) {
     _hideTimer?.cancel();
     _hideTimer = Timer(delay, () {
@@ -44,7 +43,7 @@ class _UserMenuWidgetState extends State<UserMenuWidget> {
     });
   }
 
-  // Hàm ẩn menu ngay lập tức
+  // hide menu immediately
   void _hideMenuImmediately() {
     _hideTimer?.cancel();
     _hideTimer = null;
@@ -52,7 +51,6 @@ class _UserMenuWidgetState extends State<UserMenuWidget> {
     _overlayEntry = null;
   }
 
-  // Tạo OverlayEntry cho menu
   OverlayEntry _createOverlayEntry() {
     RenderBox renderBox = context.findRenderObject() as RenderBox;
     var size = renderBox.size;
@@ -68,12 +66,10 @@ class _UserMenuWidgetState extends State<UserMenuWidget> {
             color: Colors.transparent,
             child: MouseRegion(
               onEnter: (_) {
-                // Cancel timer khi hover vào menu
                 _hideTimer?.cancel();
                 _hideTimer = null;
               },
               onExit: (_) {
-                // Đóng menu khi hover ra khỏi menu
                 _hideMenu();
               },
               child: Container(
@@ -146,10 +142,7 @@ class _UserMenuWidgetState extends State<UserMenuWidget> {
             children: [
               Text(
                 'Current User: ',
-                style: TextStyle(
-                  color: Colors.grey[700],
-                  fontSize: 14,
-                ),
+                style: TextStyle(color: Colors.grey[700], fontSize: 14),
               ),
               Text(
                 widget.currentUser,
@@ -167,7 +160,7 @@ class _UserMenuWidgetState extends State<UserMenuWidget> {
   }
 }
 
-// Widget cho menu item
+// Widget for menu item
 class _MenuItem extends StatelessWidget {
   final IconData icon;
   final String label;
@@ -188,18 +181,11 @@ class _MenuItem extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              icon,
-              color: Colors.grey[300],
-              size: 20,
-            ),
+            Icon(icon, color: Colors.grey[300], size: 20),
             const SizedBox(width: 12),
             Text(
               label,
-              style: TextStyle(
-                color: Colors.grey[300],
-                fontSize: 14,
-              ),
+              style: TextStyle(color: Colors.grey[300], fontSize: 14),
             ),
           ],
         ),
@@ -208,7 +194,7 @@ class _MenuItem extends StatelessWidget {
   }
 }
 
-// Logo Widget với click handler để navigate đến account
+// Logo Widget
 class AppLogoWidget extends StatelessWidget {
   const AppLogoWidget({super.key});
 
@@ -217,8 +203,8 @@ class AppLogoWidget extends StatelessWidget {
     return MouseRegion(
       cursor: SystemMouseCursors.click,
       child: InkWell(
+        hoverColor: Colors.white,
         onTap: () {
-          // Navigate đến trang account khi click vào logo
           GoRouter.of(context).go('/user');
         },
         borderRadius: BorderRadius.circular(8),
@@ -226,10 +212,9 @@ class AppLogoWidget extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
           child: Image.asset(
             'images/logo.png',
-            height: 50, // Điều chỉnh chiều cao logo
+            height: 50,
             fit: BoxFit.contain,
             errorBuilder: (context, error, stackTrace) {
-              // Fallback nếu không tìm thấy ảnh
               return const Text(
                 'BubbleSheet',
                 style: TextStyle(
@@ -246,11 +231,8 @@ class AppLogoWidget extends StatelessWidget {
   }
 }
 
-class MainLayout extends StatelessWidget {
+class MainLayout extends StatefulWidget {
   final Widget child;
-
-  // When not using GoRouter (e.g., direct MaterialApp.home), provide the current path
-  // so we don't rely on GoRouterState.of(context).
   final String? currentPath;
 
   const MainLayout({super.key, required this.child, this.currentPath});
@@ -272,12 +254,24 @@ class MainLayout extends StatelessWidget {
   ];
 
   @override
+  State<MainLayout> createState() => _MainLayoutState();
+}
+
+class _MainLayoutState extends State<MainLayout> {
+  final ScrollController _scrollController = ScrollController();
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     // Provide context to ApiService for 401 handling (logout + navigate)
     ApiService.setContext(context);
     final currentUser = context.watch<AuthProvider>().currentUser ?? '';
-    // Prefer provided currentPath, otherwise read from GoRouter (only valid under a GoRoute builder)
-    String resolvedPath = currentPath ?? '';
+    String resolvedPath = widget.currentPath ?? '';
     if (resolvedPath.isEmpty) {
       final state = GoRouter.maybeOf(
         context,
@@ -285,27 +279,29 @@ class MainLayout extends StatelessWidget {
       resolvedPath = state?.uri.toString() ?? '/';
     }
 
-    // Xác định tab đang active dựa vào URL
-    int selectedIndex = _tabRoutes.indexWhere(
+    int selectedIndex = MainLayout._tabRoutes.indexWhere(
       (route) => resolvedPath.contains(route),
     );
     if (selectedIndex == -1) selectedIndex = 0;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Padding(
-          padding: EdgeInsets.only(left: 160.0),
-          child: AppLogoWidget(),
-        ),
-        titleSpacing: 0, // Disable default title spacing để control padding bằng Padding widget
-        actions: [
-          // User Menu với hover behavior
-          UserMenuWidget(currentUser: currentUser),
-        ],
-        actionsPadding: const EdgeInsets.only(right: 160.0), // Padding cho actions (bên phải)
         backgroundColor: Colors.white,
         foregroundColor: Colors.black87,
         elevation: 1,
+        titleSpacing: 0,
+        title: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 1200),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const AppLogoWidget(),
+                UserMenuWidget(currentUser: currentUser),
+              ],
+            ),
+          ),
+        ),
       ),
       backgroundColor: const Color(0xFFF5F6FA),
       body: Column(
@@ -314,19 +310,25 @@ class MainLayout extends StatelessWidget {
             color: Colors.grey[200],
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
-              children: List.generate(_tabTitles.length, (index) {
+              children: List.generate(MainLayout._tabTitles.length, (index) {
                 return TextButton(
+                  style: TextButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 16,
+                    ),
+                  ),
                   onPressed: () {
                     final router = GoRouter.maybeOf(context);
-                    if (router == null) return; // not under router; do nothing
+                    if (router == null) return;
                     if (index == 0) {
                       router.go('/quizzes');
                     } else if (selectedIndex != index) {
-                      router.go(_tabRoutes[index]);
+                      router.go(MainLayout._tabRoutes[index]);
                     }
                   },
                   child: Text(
-                    _tabTitles[index],
+                    MainLayout._tabTitles[index],
                     style: TextStyle(
                       fontWeight: selectedIndex == index
                           ? FontWeight.bold
@@ -342,7 +344,28 @@ class MainLayout extends StatelessWidget {
             ),
           ),
           const Divider(height: 1),
-          Expanded(child: child),
+          Expanded(
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                return Scrollbar(
+                  controller: _scrollController,
+                  thumbVisibility: true,
+                  child: SingleChildScrollView(
+                    controller: _scrollController,
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(
+                        minHeight: constraints.maxHeight,
+                      ),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [widget.child, const AppFooter()],
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
         ],
       ),
     );

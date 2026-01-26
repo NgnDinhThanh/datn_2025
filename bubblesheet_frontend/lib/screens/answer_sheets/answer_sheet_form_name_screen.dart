@@ -7,7 +7,8 @@ class AnswerSheetFormNameScreen extends StatefulWidget {
   const AnswerSheetFormNameScreen({Key? key}) : super(key: key);
 
   @override
-  State<AnswerSheetFormNameScreen> createState() => _AnswerSheetFormNameScreenState();
+  State<AnswerSheetFormNameScreen> createState() =>
+      _AnswerSheetFormNameScreenState();
 }
 
 class _AnswerSheetFormNameScreenState extends State<AnswerSheetFormNameScreen> {
@@ -20,7 +21,10 @@ class _AnswerSheetFormNameScreenState extends State<AnswerSheetFormNameScreen> {
     _nameController = TextEditingController();
     // Set initial value
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final formProvider = Provider.of<AnswerSheetFormProvider>(context, listen: false);
+      final formProvider = Provider.of<AnswerSheetFormProvider>(
+        context,
+        listen: false,
+      );
       _nameController.text = formProvider.name;
     });
   }
@@ -34,71 +38,71 @@ class _AnswerSheetFormNameScreenState extends State<AnswerSheetFormNameScreen> {
   @override
   Widget build(BuildContext context) {
     final formProvider = Provider.of<AnswerSheetFormProvider>(context);
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Step 1 of 5: Custom Answer Sheet Name'),
-        centerTitle: true,
-      ),
-      body: Center(
-        child: Container(
-          constraints: const BoxConstraints(maxWidth: 500),
-          padding: const EdgeInsets.all(24),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                const Text(
-                  'Name',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+    return Center(
+      child: Container(
+        constraints: const BoxConstraints(maxWidth: 500),
+        padding: const EdgeInsets.all(24),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const Text(
+                'Step 1 of 5: Custom Anser Sheet Name',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+              const Text(
+                'Name',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+              ),
+              const SizedBox(height: 8),
+              TextFormField(
+                controller: _nameController,
+                decoration: const InputDecoration(
+                  hintText: 'Enter Name',
+                  border: OutlineInputBorder(),
                 ),
-                const SizedBox(height: 8),
-                TextFormField(
-                  controller: _nameController,
-                  decoration: const InputDecoration(
-                    hintText: 'Enter Name',
-                    border: OutlineInputBorder(),
+                validator: (value) {
+                  if (value == null || value.trim().isEmpty) {
+                    return 'Please enter a name';
+                  }
+                  if (value.length > 50) {
+                    return 'Name should be less than 50 characters';
+                  }
+                  return null;
+                },
+                onChanged: (value) {
+                  formProvider.setName(value);
+                },
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'The name of the answer sheet should be unique and descriptive',
+                style: TextStyle(fontSize: 13, color: Colors.grey),
+              ),
+              const SizedBox(height: 24),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  ElevatedButton.icon(
+                    onPressed: () {
+                      if (_formKey.currentState!.validate()) {
+                        formProvider.setName(_nameController.text.trim());
+                        context.go('/answer-sheets/create/header/');
+                      }
+                    },
+                    icon: const Icon(Icons.arrow_forward),
+                    label: const Text('Next'),
                   ),
-                  validator: (value) {
-                    if (value == null || value.trim().isEmpty) {
-                      return 'Please enter a name';
-                    }
-                    if (value.length > 50) {
-                      return 'Name should be less than 50 characters';
-                    }
-                    return null;
-                  },
-                  onChanged: (value) {
-                    formProvider.setName(value);
-                  },
-                ),
-                const SizedBox(height: 8),
-                const Text(
-                  'The name of the answer sheet should be unique and descriptive',
-                  style: TextStyle(fontSize: 13, color: Colors.grey),
-                ),
-                const SizedBox(height: 24),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    ElevatedButton.icon(
-                      onPressed: () {
-                        if (_formKey.currentState!.validate()) {
-                          formProvider.setName(_nameController.text.trim());
-                          context.go('/answer-sheets/create/header/');
-                        }
-                      },
-                      icon: const Icon(Icons.arrow_forward),
-                      label: const Text('Next'),
-                    ),
-                  ],
-                ),
-              ],
-            ),
+                ],
+              ),
+            ],
           ),
         ),
       ),
     );
   }
-} 
+}

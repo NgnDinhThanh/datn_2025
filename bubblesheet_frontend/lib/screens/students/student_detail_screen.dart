@@ -8,7 +8,9 @@ import 'package:intl/intl.dart';
 
 class StudentDetailScreen extends StatefulWidget {
   final String studentId;
-  const StudentDetailScreen({Key? key, required this.studentId}) : super(key: key);
+
+  const StudentDetailScreen({Key? key, required this.studentId})
+    : super(key: key);
 
   @override
   State<StudentDetailScreen> createState() => _StudentDetailScreenState();
@@ -18,16 +20,16 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
   bool _isLoading = true;
   String? _error;
   StudentDetailData? _studentDetailData;
-  
+
   // Search and filter
   final TextEditingController _searchController = TextEditingController();
   String _searchText = '';
   Timer? _debounce;
-  
+
   // Sorting
   String _sortField = 'scanned_at';
   bool _sortAsc = false; // Default: newest first
-  
+
   // Pagination
   int _pageSize = 10;
   int _currentPage = 1;
@@ -70,7 +72,10 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
         throw Exception('Not authenticated');
       }
 
-      final studentDetail = await StudentService.getStudentDetail(widget.studentId, token);
+      final studentDetail = await StudentService.getStudentDetail(
+        widget.studentId,
+        token,
+      );
       setState(() {
         _studentDetailData = studentDetail;
         _isLoading = false;
@@ -107,13 +112,17 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
       int comparison = 0;
       switch (_sortField) {
         case 'class':
-          comparison = (a.className ?? a.classCode).compareTo(b.className ?? b.classCode);
+          comparison = (a.className ?? a.classCode).compareTo(
+            b.className ?? b.classCode,
+          );
           break;
         case 'quiz_date':
           comparison = (a.examDate ?? '').compareTo(b.examDate ?? '');
           break;
         case 'quiz':
-          comparison = (a.examName ?? a.examId).compareTo(b.examName ?? b.examId);
+          comparison = (a.examName ?? a.examId).compareTo(
+            b.examName ?? b.examId,
+          );
           break;
         case 'score':
           comparison = (a.score ?? 0).compareTo(b.score ?? 0);
@@ -148,8 +157,12 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
   }
 
   int get _totalPapers => _filteredAndSortedPapers.length;
+
   int get _totalPages => (_totalPapers / _pageSize).ceil();
-  int get _startIndex => _totalPapers == 0 ? 0 : (_currentPage - 1) * _pageSize + 1;
+
+  int get _startIndex =>
+      _totalPapers == 0 ? 0 : (_currentPage - 1) * _pageSize + 1;
+
   int get _endIndex => (_startIndex + _pageSize - 1).clamp(0, _totalPapers);
 
   void _sortBy(String field) {
@@ -193,72 +206,73 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF5F6FA),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _error != null
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.error_outline, size: 64, color: Colors.red[300]),
-                      const SizedBox(height: 16),
-                      Text(
-                        'Error loading student detail',
-                        style: Theme.of(context).textTheme.titleLarge,
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        _error!,
-                        style: Theme.of(context).textTheme.bodyMedium,
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 16),
-                      ElevatedButton(
-                        onPressed: _fetchStudentDetail,
-                        child: const Text('Retry'),
-                      ),
-                    ],
-                  ),
-                )
-              : _studentDetailData == null
-                  ? const Center(child: Text('No data available'))
-                  : _buildContent(),
-    );
+    if (_isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (_error != null) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.error_outline, size: 64, color: Colors.red[300]),
+            const SizedBox(height: 16),
+            Text(
+              'Error loading student detail',
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              _error!,
+              style: Theme.of(context).textTheme.bodyMedium,
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: _fetchStudentDetail,
+              child: const Text('Retry'),
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (_studentDetailData == null) {
+      return const Center(child: Text('No data available'));
+    }
+
+    return _buildContent();
   }
 
   Widget _buildContent() {
-    return SingleChildScrollView(
-      child: Container(
-        margin: const EdgeInsets.all(24),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Header: Student Name
-            Padding(
-              padding: const EdgeInsets.all(24),
-              child: Text(
-                _studentDetailData!.fullName,
-                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-              ),
+    return Container(
+      margin: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header: Student Name
+          Padding(
+            padding: const EdgeInsets.all(24),
+            child: Text(
+              _studentDetailData!.fullName,
+              style: Theme.of(
+                context,
+              ).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold),
             ),
-            
-            // Student Information Section
-            _buildStudentInfoSection(),
-            
-            const Divider(height: 1),
-            
-            // Graded Papers Section
-            _buildGradedPapersSection(),
-          ],
-        ),
+          ),
+
+          // Student Information Section
+          _buildStudentInfoSection(),
+
+          const Divider(height: 1),
+
+          // Graded Papers Section
+          _buildGradedPapersSection(),
+        ],
       ),
     );
   }
@@ -277,7 +291,9 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
             'Classes',
             _studentDetailData!.classes.isEmpty
                 ? ''
-                : _studentDetailData!.classes.map((c) => c.className).join(', '),
+                : _studentDetailData!.classes
+                      .map((c) => c.className)
+                      .join(', '),
           ),
         ],
       ),
@@ -322,9 +338,9 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
             children: [
               Text(
                 'Graded Papers',
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
               ),
               const Spacer(),
               Row(
@@ -336,7 +352,10 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
                       controller: _searchController,
                       decoration: const InputDecoration(
                         isDense: true,
-                        contentPadding: EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+                        contentPadding: EdgeInsets.symmetric(
+                          vertical: 8,
+                          horizontal: 8,
+                        ),
                         border: OutlineInputBorder(),
                       ),
                     ),
@@ -346,12 +365,12 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
             ],
           ),
           const SizedBox(height: 16),
-          
+
           // Table
           _buildPapersTable(),
-          
+
           const SizedBox(height: 16),
-          
+
           // Pagination
           _buildPagination(),
         ],
@@ -361,7 +380,7 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
 
   Widget _buildPapersTable() {
     final papers = _paginatedPapers;
-    
+
     if (_totalPapers == 0) {
       return Container(
         padding: const EdgeInsets.all(32),
@@ -370,9 +389,9 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
             _searchText.isNotEmpty
                 ? 'No graded papers found matching your search'
                 : 'No graded papers found',
-            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  color: Colors.grey[600],
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.bodyLarge?.copyWith(color: Colors.grey[600]),
           ),
         ),
       );
@@ -388,11 +407,11 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
         columnWidths: const {
           0: FlexColumnWidth(1.5), // Class
           1: FlexColumnWidth(1.5), // Quiz Date
-          2: FlexColumnWidth(2),   // Quiz
-          3: FlexColumnWidth(1),   // Score
-          4: FlexColumnWidth(1),   // %
-          5: FlexColumnWidth(1),   // Key
-          6: FlexColumnWidth(2),   // Timestamp
+          2: FlexColumnWidth(2), // Quiz
+          3: FlexColumnWidth(1), // Score
+          4: FlexColumnWidth(1), // %
+          5: FlexColumnWidth(1), // Key
+          6: FlexColumnWidth(2), // Timestamp
         },
         children: [
           // Header row
@@ -409,26 +428,30 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
             ],
           ),
           // Data rows
-          ...papers.map((paper) => TableRow(
-                children: [
-                  _buildCell(paper.className ?? paper.classCode),
-                  _buildCell(_formatDate(paper.examDate)),
-                  _buildCell(
-                    paper.examName ?? paper.examId,
-                    isClickable: true,
-                    onTap: () {
-                      // Navigate to quiz detail
-                      // context.go('/quizzes/${paper.examId}');
-                    },
-                  ),
-                  _buildCell(paper.score?.toStringAsFixed(1) ?? '-'),
-                  _buildCell(paper.percentage != null
+          ...papers.map(
+            (paper) => TableRow(
+              children: [
+                _buildCell(paper.className ?? paper.classCode),
+                _buildCell(_formatDate(paper.examDate)),
+                _buildCell(
+                  paper.examName ?? paper.examId,
+                  isClickable: true,
+                  onTap: () {
+                    // Navigate to quiz detail
+                    // context.go('/quizzes/${paper.examId}');
+                  },
+                ),
+                _buildCell(paper.score?.toStringAsFixed(1) ?? '-'),
+                _buildCell(
+                  paper.percentage != null
                       ? '${paper.percentage!.toStringAsFixed(1)}%'
-                      : '-'),
-                  _buildCell(paper.versionCode ?? '-'),
-                  _buildCell(_formatTimestamp(paper.scannedAt)),
-                ],
-              )),
+                      : '-',
+                ),
+                _buildCell(paper.versionCode ?? '-'),
+                _buildCell(_formatTimestamp(paper.scannedAt)),
+              ],
+            ),
+          ),
         ],
       ),
     );
@@ -458,16 +481,12 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
                 Icon(
                   Icons.arrow_upward,
                   size: 14,
-                  color: isActive && _sortAsc
-                      ? Colors.blue
-                      : Colors.grey[400],
+                  color: isActive && _sortAsc ? Colors.blue : Colors.grey[400],
                 ),
                 Icon(
                   Icons.arrow_downward,
                   size: 14,
-                  color: isActive && !_sortAsc
-                      ? Colors.blue
-                      : Colors.grey[400],
+                  color: isActive && !_sortAsc ? Colors.blue : Colors.grey[400],
                 ),
               ],
             ),
@@ -477,7 +496,11 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
     );
   }
 
-  Widget _buildCell(String text, {bool isClickable = false, VoidCallback? onTap}) {
+  Widget _buildCell(
+    String text, {
+    bool isClickable = false,
+    VoidCallback? onTap,
+  }) {
     return Container(
       padding: const EdgeInsets.all(12),
       alignment: Alignment.center,
@@ -521,10 +544,7 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
             DropdownButton<int>(
               value: _pageSize,
               items: _pageSizeOptions.map((size) {
-                return DropdownMenuItem(
-                  value: size,
-                  child: Text('$size'),
-                );
+                return DropdownMenuItem(value: size, child: Text('$size'));
               }).toList(),
               onChanged: (value) {
                 if (value != null) {

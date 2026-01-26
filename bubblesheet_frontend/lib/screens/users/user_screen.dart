@@ -1,3 +1,5 @@
+import 'package:bubblesheet_frontend/models/user_model.dart';
+import 'package:bubblesheet_frontend/widgets/app_footer.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
@@ -49,75 +51,62 @@ class _UserScreenState extends State<UserScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF5F6FA),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _error != null
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.error_outline, size: 64, color: Colors.red[300]),
-                      const SizedBox(height: 16),
-                      Text(
-                        'Error loading profile',
-                        style: Theme.of(context).textTheme.titleLarge,
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        _error!,
-                        style: Theme.of(context).textTheme.bodyMedium,
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 16),
-                      ElevatedButton(
-                        onPressed: _fetchUserProfile,
-                        child: const Text('Retry'),
-                      ),
-                    ],
-                  ),
-                )
-              : _profileData == null
-                  ? const Center(child: Text('No data available'))
-                  : _buildContent(),
-    );
+    if (_isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (_error != null) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.error_outline, size: 64, color: Colors.red[300]),
+            const SizedBox(height: 16),
+            Text(
+              'Error loading profile',
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              _error!,
+              style: Theme.of(context).textTheme.bodyMedium,
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: _fetchUserProfile,
+              child: const Text('Retry'),
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (_profileData == null) {
+      return const Center(child: Text('No data available'));
+    }
+
+    return _buildContent();
   }
 
   Widget _buildContent() {
-    return SingleChildScrollView(
+    return Center(
       child: Container(
         margin: const EdgeInsets.all(24),
-        constraints: const BoxConstraints(maxWidth: 1000),
+        constraints: const BoxConstraints(maxWidth: 1200),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Header
-            Container(
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Text(
-                'My Account',
-                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-              ),
-            ),
-            const SizedBox(height: 24),
-            
             // Profile Information Section
             _buildProfileSection(),
-            
+
             const SizedBox(height: 24),
-            
+
             // Statistics Section
             _buildStatisticsSection(),
-            
+
             const SizedBox(height: 24),
-            
+
             // Quick Actions Section
             _buildQuickActionsSection(),
           ],
@@ -138,9 +127,9 @@ class _UserScreenState extends State<UserScreen> {
         children: [
           Text(
             'Profile Information',
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 24),
           // Avatar and Info
@@ -206,19 +195,14 @@ class _UserScreenState extends State<UserScreen> {
             ),
           ),
         ),
-        Expanded(
-          child: Text(
-            value,
-            style: const TextStyle(fontSize: 14),
-          ),
-        ),
+        Expanded(child: Text(value, style: const TextStyle(fontSize: 14))),
       ],
     );
   }
 
   Widget _buildStatisticsSection() {
     final stats = _profileData!.statistics;
-    
+
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
@@ -230,9 +214,9 @@ class _UserScreenState extends State<UserScreen> {
         children: [
           Text(
             'Statistics',
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 24),
           // Statistics Cards Grid
@@ -242,30 +226,86 @@ class _UserScreenState extends State<UserScreen> {
               return isWide
                   ? Row(
                       children: [
-                        Expanded(child: _buildStatCard('Classes', stats.totalClasses, Icons.class_, Colors.blue)),
+                        Expanded(
+                          child: _buildStatCard(
+                            'Classes',
+                            stats.totalClasses,
+                            Icons.class_,
+                            Colors.blue,
+                          ),
+                        ),
                         const SizedBox(width: 16),
-                        Expanded(child: _buildStatCard('Students', stats.totalStudents, Icons.people, Colors.green)),
+                        Expanded(
+                          child: _buildStatCard(
+                            'Students',
+                            stats.totalStudents,
+                            Icons.people,
+                            Colors.green,
+                          ),
+                        ),
                         const SizedBox(width: 16),
-                        Expanded(child: _buildStatCard('Quizzes', stats.totalQuizzes, Icons.quiz, Colors.orange)),
+                        Expanded(
+                          child: _buildStatCard(
+                            'Quizzes',
+                            stats.totalQuizzes,
+                            Icons.quiz,
+                            Colors.orange,
+                          ),
+                        ),
                         const SizedBox(width: 16),
-                        Expanded(child: _buildStatCard('Graded Papers', stats.totalGradedPapers, Icons.assignment, Colors.purple)),
+                        Expanded(
+                          child: _buildStatCard(
+                            'Graded Papers',
+                            stats.totalGradedPapers,
+                            Icons.assignment,
+                            Colors.purple,
+                          ),
+                        ),
                       ],
                     )
                   : Column(
                       children: [
                         Row(
                           children: [
-                            Expanded(child: _buildStatCard('Classes', stats.totalClasses, Icons.class_, Colors.blue)),
+                            Expanded(
+                              child: _buildStatCard(
+                                'Classes',
+                                stats.totalClasses,
+                                Icons.class_,
+                                Colors.blue,
+                              ),
+                            ),
                             const SizedBox(width: 16),
-                            Expanded(child: _buildStatCard('Students', stats.totalStudents, Icons.people, Colors.green)),
+                            Expanded(
+                              child: _buildStatCard(
+                                'Students',
+                                stats.totalStudents,
+                                Icons.people,
+                                Colors.green,
+                              ),
+                            ),
                           ],
                         ),
                         const SizedBox(height: 16),
                         Row(
                           children: [
-                            Expanded(child: _buildStatCard('Quizzes', stats.totalQuizzes, Icons.quiz, Colors.orange)),
+                            Expanded(
+                              child: _buildStatCard(
+                                'Quizzes',
+                                stats.totalQuizzes,
+                                Icons.quiz,
+                                Colors.orange,
+                              ),
+                            ),
                             const SizedBox(width: 16),
-                            Expanded(child: _buildStatCard('Graded Papers', stats.totalGradedPapers, Icons.assignment, Colors.purple)),
+                            Expanded(
+                              child: _buildStatCard(
+                                'Graded Papers',
+                                stats.totalGradedPapers,
+                                Icons.assignment,
+                                Colors.purple,
+                              ),
+                            ),
                           ],
                         ),
                       ],
@@ -328,9 +368,9 @@ class _UserScreenState extends State<UserScreen> {
         children: [
           Text(
             'Quick Actions',
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 24),
           Wrap(
@@ -365,9 +405,9 @@ class _UserScreenState extends State<UserScreen> {
           // Settings/Actions
           Text(
             'Account Settings',
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 16),
           SizedBox(
@@ -405,9 +445,7 @@ class _UserScreenState extends State<UserScreen> {
       label: Text(label),
       style: ElevatedButton.styleFrom(
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       ),
     );
   }

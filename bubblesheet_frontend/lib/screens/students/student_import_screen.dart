@@ -26,25 +26,32 @@ class _StudentImportScreenState extends State<StudentImportScreen> {
   bool _hasHeader = false;
   List<List<String>> _csvData = [];
   List<String> _headers = [];
-  Map<String, int> _fieldMapping = {'id': -1, 'first_name': -1, 'last_name': -1};
+  Map<String, int> _fieldMapping = {
+    'id': -1,
+    'first_name': -1,
+    'last_name': -1,
+  };
   String _classOption = 'none';
   String? _selectedClassId;
   String? _result;
   bool _isUploading = false;
+
   // html.File? _pendingFile; // Web-only
 
-  void _pickFile() async{
+  void _pickFile() async {
     // Web-only file picker logic
     if (!kIsWeb) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('File import functionality is only available on web')),
+        const SnackBar(
+          content: Text('File import functionality is only available on web'),
+        ),
       );
       return;
     }
     try {
       FilePickerResult? result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
-        allowedExtensions: ['csv', 'txt']
+        allowedExtensions: ['csv', 'txt'],
       );
 
       if (result != null && result.files.single.bytes != null) {
@@ -62,9 +69,9 @@ class _StudentImportScreenState extends State<StudentImportScreen> {
         }
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Error picking file: $e")),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Error picking file: $e")));
     }
   }
 
@@ -82,7 +89,10 @@ class _StudentImportScreenState extends State<StudentImportScreen> {
   }
 
   Future<void> _importStudents() async {
-    setState(() { _isUploading = true; _result = null; });
+    setState(() {
+      _isUploading = true;
+      _result = null;
+    });
     // Chuẩn bị dữ liệu mapping
     List<Map<String, String>> students = [];
     for (var row in _csvData) {
@@ -97,7 +107,10 @@ class _StudentImportScreenState extends State<StudentImportScreen> {
       });
     }
     final token = Provider.of<AuthProvider>(context, listen: false).token;
-    var request = http.MultipartRequest('POST', Uri.parse('${ApiService.baseUrl}/students/import/'));
+    var request = http.MultipartRequest(
+      'POST',
+      Uri.parse('${ApiService.baseUrl}/students/import/'),
+    );
     request.headers['Authorization'] = 'Bearer $token';
     request.fields['has_header'] = 'false';
     request.fields['students'] = jsonEncode(students);
@@ -106,7 +119,11 @@ class _StudentImportScreenState extends State<StudentImportScreen> {
     }
     final streamedResponse = await request.send();
     final response = await http.Response.fromStream(streamedResponse);
-    setState(() { _isUploading = false; _result = response.body; _step = 2; });
+    setState(() {
+      _isUploading = false;
+      _result = response.body;
+      _step = 2;
+    });
     if (response.statusCode == 200) {
       await context.read<StudentProvider>().fetchStudents(context);
       await context.read<ClassProvider>().fetchClasses(context);
@@ -117,7 +134,9 @@ class _StudentImportScreenState extends State<StudentImportScreen> {
     // Web-only upload logic
     if (!kIsWeb) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("File upload functionality is only available on web"))
+        const SnackBar(
+          content: Text("File upload functionality is only available on web"),
+        ),
       );
       return;
     }
@@ -137,34 +156,36 @@ class _StudentImportScreenState extends State<StudentImportScreen> {
         _step = 1;
       });
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('File is empty or invalid'))
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('File is empty or invalid')));
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final allClasses = context.watch<ClassProvider>().classes;
-    return Scaffold(
-      backgroundColor: const Color(0xFFF5F6FA),
-      body: Center(
-        child: Container(
-          width: 900,
-          padding: const EdgeInsets.all(32),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black12,
-                blurRadius: 16,
-                offset: Offset(0, 8),
-              ),
-            ],
-          ),
-          child: _step == 0 ? _buildStep1() : _step == 1 ? _buildStep2(allClasses) : _buildStep3(),
+    return Center(
+      child: Container(
+        width: 900,
+        padding: const EdgeInsets.all(32),
+        margin: const EdgeInsets.symmetric(vertical: 24),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black12,
+              blurRadius: 16,
+              offset: Offset(0, 8),
+            ),
+          ],
         ),
+        child: _step == 0
+            ? _buildStep1()
+            : _step == 1
+            ? _buildStep2(allClasses)
+            : _buildStep3(),
       ),
     );
   }
@@ -177,13 +198,25 @@ class _StudentImportScreenState extends State<StudentImportScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('File requirements:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
+              const Text(
+                'File requirements:',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+              ),
               const SizedBox(height: 8),
-              const Text("Must have 'csv' extension\nFields should be separated by commas.\nFields:", style: TextStyle(fontSize: 16)),
+              const Text(
+                "Must have 'csv' extension\nFields should be separated by commas.\nFields:",
+                style: TextStyle(fontSize: 16),
+              ),
               const SizedBox(height: 4),
-              const Text("  - Student ID (required)\n  - First Name (required)\n  - Last Name (required)", style: TextStyle(fontSize: 15)),
+              const Text(
+                "  - Student ID (required)\n  - First Name (required)\n  - Last Name (required)",
+                style: TextStyle(fontSize: 15),
+              ),
               const SizedBox(height: 8),
-              const Text("If your file has a header row, please check 'Has header row' so first row will be ignored on import.", style: TextStyle(fontSize: 15)),
+              const Text(
+                "If your file has a header row, please check 'Has header row' so first row will be ignored on import.",
+                style: TextStyle(fontSize: 15),
+              ),
             ],
           ),
         ),
@@ -199,7 +232,10 @@ class _StudentImportScreenState extends State<StudentImportScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const Text('Browse CSV file:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+              const Text(
+                'Browse CSV file:',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+              ),
               const SizedBox(height: 16),
               ElevatedButton(
                 onPressed: _isUploading ? null : _pickFile,
@@ -210,15 +246,28 @@ class _StudentImportScreenState extends State<StudentImportScreen> {
                 children: [
                   Checkbox(
                     value: _hasHeader,
-                    onChanged: _isUploading ? null : (v) => setState(() => _hasHeader = v ?? false),
+                    onChanged: _isUploading
+                        ? null
+                        : (v) => setState(() => _hasHeader = v ?? false),
                   ),
                   const Text('Has a Header Row (Skip first row)?'),
                 ],
               ),
               const SizedBox(height: 12),
               ElevatedButton(
-                onPressed: (_fileName != null && !_isUploading) ? _handleUpload : null,
-                child: _isUploading ? const SizedBox(height: 22, width: 22, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)) : const Text('Upload'),
+                onPressed: (_fileName != null && !_isUploading)
+                    ? _handleUpload
+                    : null,
+                child: _isUploading
+                    ? const SizedBox(
+                        height: 22,
+                        width: 22,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      )
+                    : const Text('Upload'),
               ),
             ],
           ),
@@ -235,7 +284,10 @@ class _StudentImportScreenState extends State<StudentImportScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('SELECT FIELD MAPPING', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+              const Text(
+                'SELECT FIELD MAPPING',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+              ),
               const SizedBox(height: 16),
               _buildMappingDropdown('Student ID', 'id'),
               _buildMappingDropdown('First Name', 'first_name'),
@@ -245,24 +297,51 @@ class _StudentImportScreenState extends State<StudentImportScreen> {
               DropdownButton<String>(
                 value: _classOption,
                 items: const [
-                  DropdownMenuItem(value: 'none', child: Text('Do not load students into class')),
-                  DropdownMenuItem(value: 'class', child: Text('Place students into existing class')),
+                  DropdownMenuItem(
+                    value: 'none',
+                    child: Text('Do not load students into class'),
+                  ),
+                  DropdownMenuItem(
+                    value: 'class',
+                    child: Text('Place students into existing class'),
+                  ),
                 ],
-                onChanged: (v) => setState(() { _classOption = v!; _selectedClassId = null; }),
+                onChanged: (v) => setState(() {
+                  _classOption = v!;
+                  _selectedClassId = null;
+                }),
               ),
               if (_classOption == 'class') ...[
                 const SizedBox(height: 8),
                 DropdownButton<String>(
                   value: _selectedClassId,
                   hint: const Text('Existing Class'),
-                  items: allClasses.map<DropdownMenuItem<String>>((c) => DropdownMenuItem(value: c.id, child: Text(c.class_name))).toList(),
+                  items: allClasses
+                      .map<DropdownMenuItem<String>>(
+                        (c) => DropdownMenuItem(
+                          value: c.id,
+                          child: Text(c.class_name),
+                        ),
+                      )
+                      .toList(),
                   onChanged: (v) => setState(() => _selectedClassId = v),
                 ),
               ],
               const SizedBox(height: 24),
               ElevatedButton(
-                onPressed: _isUploading || !_mappingValid() ? null : _importStudents,
-                child: _isUploading ? const SizedBox(height: 22, width: 22, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)) : const Text('Next'),
+                onPressed: _isUploading || !_mappingValid()
+                    ? null
+                    : _importStudents,
+                child: _isUploading
+                    ? const SizedBox(
+                        height: 22,
+                        width: 22,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      )
+                    : const Text('Next'),
               ),
             ],
           ),
@@ -272,7 +351,14 @@ class _StudentImportScreenState extends State<StudentImportScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('DATA READ FROM FILE:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.green)),
+              const Text(
+                'DATA READ FROM FILE:',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                  color: Colors.green,
+                ),
+              ),
               const SizedBox(height: 8),
               _buildPreviewTable(),
             ],
@@ -293,7 +379,7 @@ class _StudentImportScreenState extends State<StudentImportScreen> {
 
     final successCount = resultMap?['success_count'] ?? 0;
     final errorCount = resultMap?['error_count'] ?? 0;
-    
+
     // Parse errors đúng cấu trúc (List<Map> từ backend)
     final errorsList = (resultMap?['errors'] as List?) ?? [];
     final errors = errorsList.map((errorMap) {
@@ -342,7 +428,9 @@ class _StudentImportScreenState extends State<StudentImportScreen> {
         ),
         const SizedBox(height: 16),
         Text(
-          errorCount == 0 ? 'Import successful!' : 'Some errors occurred during import.',
+          errorCount == 0
+              ? 'Import successful!'
+              : 'Some errors occurred during import.',
           style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
         ),
         const SizedBox(height: 16),
@@ -350,7 +438,10 @@ class _StudentImportScreenState extends State<StudentImportScreen> {
         Text('Number of errors: $errorCount'),
         if (errors.isNotEmpty) ...[
           const SizedBox(height: 16),
-          const Text('Error list:', style: TextStyle(fontWeight: FontWeight.bold)),
+          const Text(
+            'Error list:',
+            style: TextStyle(fontWeight: FontWeight.bold),
+          ),
           ...errors.map((e) => Text('- $e')).toList(),
         ],
         const SizedBox(height: 24),
@@ -367,12 +458,24 @@ class _StudentImportScreenState extends State<StudentImportScreen> {
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: Row(
         children: [
-          SizedBox(width: 120, child: Text(label + (field != 'id' ? '' : '*'), style: const TextStyle(fontWeight: FontWeight.bold))),
+          SizedBox(
+            width: 120,
+            child: Text(
+              label + (field != 'id' ? '' : '*'),
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
+          ),
           const SizedBox(width: 12),
           DropdownButton<int>(
             value: _fieldMapping[field] != -1 ? _fieldMapping[field] : null,
             hint: const Text('Select column'),
-            items: _headers.asMap().entries.map((e) => DropdownMenuItem(value: e.key, child: Text(e.value))).toList(),
+            items: _headers
+                .asMap()
+                .entries
+                .map(
+                  (e) => DropdownMenuItem(value: e.key, child: Text(e.value)),
+                )
+                .toList(),
             onChanged: (v) => setState(() => _fieldMapping[field] = v!),
           ),
         ],
@@ -384,23 +487,46 @@ class _StudentImportScreenState extends State<StudentImportScreen> {
     if (_headers.isEmpty || _csvData.isEmpty) return const Text('No data');
     return Table(
       border: TableBorder.all(color: Colors.grey, width: 0.7),
-      columnWidths: {for (var i = 0; i < _headers.length; i++) i: const IntrinsicColumnWidth()},
+      columnWidths: {
+        for (var i = 0; i < _headers.length; i++)
+          i: const IntrinsicColumnWidth(),
+      },
       children: [
         TableRow(
           decoration: BoxDecoration(color: Colors.grey.shade200),
-          children: _headers.map((h) => Padding(padding: const EdgeInsets.all(8), child: Text(h, style: const TextStyle(fontWeight: FontWeight.bold)))).toList(),
+          children: _headers
+              .map(
+                (h) => Padding(
+                  padding: const EdgeInsets.all(8),
+                  child: Text(
+                    h,
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                ),
+              )
+              .toList(),
         ),
-        ..._csvData.take(10).map((row) => TableRow(
-          children: List.generate(_headers.length, (i) => Padding(
-            padding: const EdgeInsets.all(8),
-            child: Text(i < row.length ? row[i] : ''),
-          )),
-        )),
+        ..._csvData
+            .take(10)
+            .map(
+              (row) => TableRow(
+                children: List.generate(
+                  _headers.length,
+                  (i) => Padding(
+                    padding: const EdgeInsets.all(8),
+                    child: Text(i < row.length ? row[i] : ''),
+                  ),
+                ),
+              ),
+            ),
       ],
     );
   }
 
   bool _mappingValid() {
-    return _fieldMapping['id'] != -1 && _fieldMapping['first_name'] != -1 && _fieldMapping['last_name'] != -1 && (_classOption != 'class' || _selectedClassId != null);
+    return _fieldMapping['id'] != -1 &&
+        _fieldMapping['first_name'] != -1 &&
+        _fieldMapping['last_name'] != -1 &&
+        (_classOption != 'class' || _selectedClassId != null);
   }
-} 
+}

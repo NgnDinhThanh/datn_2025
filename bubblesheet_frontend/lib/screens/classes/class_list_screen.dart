@@ -28,8 +28,6 @@ class _ClassListScreenState extends State<ClassListScreen> {
 
   // ScrollController cho cuộn ngang bảng
   final ScrollController _horizontalController = ScrollController();
-  // ScrollController cho cuộn dọc toàn trang
-  final ScrollController _verticalController = ScrollController();
 
   @override
   void initState() {
@@ -41,7 +39,6 @@ class _ClassListScreenState extends State<ClassListScreen> {
   void dispose() {
     _searchController.dispose();
     _horizontalController.dispose();
-    _verticalController.dispose();
     _debounce?.cancel();
     super.dispose();
   }
@@ -78,12 +75,7 @@ class _ClassListScreenState extends State<ClassListScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scrollbar(
-      controller: _verticalController,
-      thumbVisibility: true,
-      child: SingleChildScrollView(
-        controller: _verticalController,
-        child: Consumer<ClassProvider>(
+    return Consumer<ClassProvider>(
           builder: (context, classProvider, child) {
             if (classProvider.isLoading) {
               return const Center(child: CircularProgressIndicator());
@@ -480,8 +472,6 @@ class _ClassListScreenState extends State<ClassListScreen> {
               ),
             );
           },
-        ),
-      ),
-    );
+        );
   }
 }

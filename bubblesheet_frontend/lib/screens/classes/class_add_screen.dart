@@ -49,12 +49,11 @@ class _ClassAddScreenState extends State<ClassAddScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF5F6FA),
-      body: Center(
+    return Center(
         child: Container(
           width: 420,
           padding: const EdgeInsets.all(32),
+          margin: const EdgeInsets.symmetric(vertical: 24),
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(16),
@@ -150,7 +149,6 @@ class _ClassAddScreenState extends State<ClassAddScreen> {
             ),
           ),
         ),
-      ),
-    );
+      );
   }
 } 

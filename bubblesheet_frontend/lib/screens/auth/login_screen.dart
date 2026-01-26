@@ -5,6 +5,10 @@ import '../students/student_list_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/class_provider.dart';
+import '../../providers/student_provider.dart';
+import '../../providers/exam_provider.dart';
+import '../../providers/answer_sheet_provider.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -18,31 +22,55 @@ class _LoginScreenState extends State<LoginScreen> {
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
   bool _isLoading = false;
+  String _loadingMessage = 'Signing in...';
   String? _error;
 
   Future<void> _handleLogin() async {
     setState(() {
       _isLoading = true;
+      _loadingMessage = 'Signing in...';
       _error = null;
     });
     final result = await ApiService.login(
       _emailController.text.trim(),
       _passwordController.text.trim(),
     );
-    setState(() {
-      _isLoading = false;
-    });
+    
     if (result['statusCode'] == 200) {
       final userName = result['body']['user']['username'];
       final token = result['body']['token'];
       // Lưu user và token vào Provider
       await context.read<AuthProvider>().setCurrentUser(userName, token);
+      
+      // Prefetch all data
+      if (mounted) {
+        setState(() {
+          _loadingMessage = 'Loading data...';
+        });
+        await _prefetchAllData();
+      }
+      
       // Điều hướng sang /user
       if (mounted) context.go('/user');
     } else {
       setState(() {
+        _isLoading = false;
         _error = result['body']['error']?.toString() ?? 'Unknown error';
       });
+    }
+  }
+
+  Future<void> _prefetchAllData() async {
+    try {
+      await Future.wait([
+        context.read<ClassProvider>().fetchClasses(context),
+        context.read<StudentProvider>().fetchStudents(context),
+        context.read<ExamProvider>().fetchExams(context),
+        context.read<AnswerSheetProvider>().fetchAnswerSheets(context),
+      ]);
+    } catch (e) {
+      // Ignore errors - data will be fetched when needed
+      debugPrint('Prefetch error: $e');
     }
   }
 
@@ -121,7 +149,22 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     onPressed: _isLoading ? null : _handleLogin,
                     child: _isLoading
-                        ? const CircularProgressIndicator(color: Colors.white)
+                        ? Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const SizedBox(
+                                width: 16,
+                                height: 16,
+                                child: CircularProgressIndicator(
+                                  color: Colors.white,
+                                  strokeWidth: 2,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Text(_loadingMessage),
+                            ],
+                          )
                         : const Text('Sign In'),
                   ),
                 ),
