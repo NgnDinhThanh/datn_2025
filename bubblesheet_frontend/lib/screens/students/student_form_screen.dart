@@ -300,6 +300,28 @@ class _StudentFormScreenState extends State<StudentFormScreen> {
                       : const Text('Save Student'),
                 ),
               ),
+              const SizedBox(height: 16),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.grey,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    textStyle: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  onPressed: _isLoading ? null : (){
+                    context.go('/students');
+                  },
+                  child: const Text('Cancel'),
+                ),
+              ),
               if (_isEdit)
                 Padding(
                   padding: const EdgeInsets.only(top: 12.0),

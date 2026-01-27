@@ -124,37 +124,52 @@ class StudentService {
   }
 
   /// Get detailed student information including graded papers
-  static Future<StudentDetailData> getStudentDetail(String studentId, String token) async {
+  static Future<StudentDetailData> getStudentDetail(
+    String studentId,
+    String token,
+  ) async {
     try {
-      final url = Uri.parse('${ApiService.baseUrl}/students/$studentId/detail/');
+      final url = Uri.parse(
+        '${ApiService.baseUrl}/students/$studentId/detail/',
+      );
       print('[StudentService] Getting student detail: $studentId');
 
-      final response = await http.get(
-        url,
-        headers: {
-          'Authorization': 'Bearer $token',
-          'Content-Type': 'application/json',
-        },
-      ).timeout(
-        const Duration(seconds: 10),
-        onTimeout: () {
-          print('[StudentService] Timeout getting student detail');
-          throw Exception('Request timeout');
-        },
-      );
+      final response = await http
+          .get(
+            url,
+            headers: {
+              'Authorization': 'Bearer $token',
+              'Content-Type': 'application/json',
+            },
+          )
+          .timeout(
+            const Duration(seconds: 10),
+            onTimeout: () {
+              print('[StudentService] Timeout getting student detail');
+              throw Exception('Request timeout');
+            },
+          );
 
-      print('[StudentService] Get student detail response: ${response.statusCode}');
+      print(
+        '[StudentService] Get student detail response: ${response.statusCode}',
+      );
 
       checkAuthError(response.statusCode, response.body);
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         final studentDetail = StudentDetailData.fromJson(data);
-        print('[StudentService] Loaded student detail: ${studentDetail.gradedPapers.length} graded papers');
+        print(
+          '[StudentService] Loaded student detail: ${studentDetail.gradedPapers.length} graded papers',
+        );
         return studentDetail;
       } else {
-        print('[StudentService] Get student detail failed: ${response.statusCode} - ${response.body}');
-        throw Exception('Failed to load student detail: Status ${response.statusCode}');
+        print(
+          '[StudentService] Get student detail failed: ${response.statusCode} - ${response.body}',
+        );
+        throw Exception(
+          'Failed to load student detail: Status ${response.statusCode}',
+        );
       }
     } catch (e, stackTrace) {
       print('[StudentService] Error getting student detail: $e');
@@ -183,11 +198,13 @@ class StudentDetailData {
   });
 
   factory StudentDetailData.fromJson(Map<String, dynamic> json) {
-    final classes = (json['classes'] as List?)
+    final classes =
+        (json['classes'] as List?)
             ?.map((c) => ClassInfo.fromJson(c))
             .toList() ??
         [];
-    final gradedPapers = (json['graded_papers'] as List?)
+    final gradedPapers =
+        (json['graded_papers'] as List?)
             ?.map((p) => GradedPaper.fromJson(p))
             .toList() ??
         [];

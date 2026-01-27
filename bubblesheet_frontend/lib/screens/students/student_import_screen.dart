@@ -241,6 +241,13 @@ class _StudentImportScreenState extends State<StudentImportScreen> {
                 onPressed: _isUploading ? null : _pickFile,
                 child: Text(_fileName == null ? 'Choose File' : _fileName!),
               ),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: (){
+                  context.go('/students');
+                },
+                child: const Text('Cancel'),
+              ),
               const SizedBox(height: 12),
               Row(
                 children: [

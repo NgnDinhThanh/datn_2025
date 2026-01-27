@@ -38,7 +38,7 @@ class _ClassAddScreenState extends State<ClassAddScreen> {
       );
       setState(() { _success = 'Class created successfully!'; });
       await Provider.of<ClassProvider>(context, listen: false).fetchClasses(context);
-      await Future.delayed(const Duration(milliseconds: 600));
+      await Future.delayed(const Duration(milliseconds: 200));
       if (mounted) context.go('/classes');
     } catch (e) {
       setState(() { _error = e.toString(); });

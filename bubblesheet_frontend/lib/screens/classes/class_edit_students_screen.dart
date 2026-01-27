@@ -41,15 +41,12 @@ class _ClassEditStudentsScreenState extends State<ClassEditStudentsScreen> {
     });
     try {
       final token = Provider.of<AuthProvider>(context, listen: false).token;
-      // Lấy danh sách sinh viên của giáo viên
       final students = await ApiService.getStudents();
-      // Lấy chi tiết lớp
       final classes = await ClassService.getClasses(token);
       final classModel = classes.firstWhere(
         (c) => c.class_code == widget.classCode,
       );
       _classModel = classModel;
-      // Phân loại
       final classStudentIds = classModel.student_ids
           .map((id) => id.toString())
           .toSet();
@@ -280,6 +277,26 @@ class _ClassEditStudentsScreenState extends State<ClassEditStudentsScreen> {
                               ),
                             )
                           : const Text('Save Student Roster'),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  SizedBox(
+                    width: 220,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.grey.shade600,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        textStyle: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      onPressed: () => context.go('/classes'),
+                      child: const Text('Cancel'),
                     ),
                   ),
                 ],

@@ -50,9 +50,11 @@ class BubbleSheetApp extends StatelessWidget {
         GoRoute(
           path: '/',
           redirect: (context, state) {
-            final loggedIn = Provider.of<AuthProvider>(context, listen: false).currentUser != null;
+            final loggedIn =
+                Provider.of<AuthProvider>(context, listen: false).currentUser !=
+                null;
             if (loggedIn) {
-              return '/classes';
+              return '/user';
             } else {
               return '/login';
             }
@@ -68,17 +70,21 @@ class BubbleSheetApp extends StatelessWidget {
         ),
         GoRoute(
           path: '/classes',
-          builder: (context, state) => const MainLayout(child: ClassListScreen()),
+          builder: (context, state) =>
+              const MainLayout(child: ClassListScreen()),
         ),
         GoRoute(
           path: '/classes/new',
-          builder: (context, state) => const MainLayout(child: ClassAddScreen()),
+          builder: (context, state) =>
+              const MainLayout(child: ClassAddScreen()),
         ),
         // Routes cụ thể phải được định nghĩa TRƯỚC route tổng quát
         GoRoute(
           path: '/classes/:id/students',
           builder: (context, state) => MainLayout(
-            child: ClassEditStudentsScreen(classCode: state.pathParameters['id']!),
+            child: ClassEditStudentsScreen(
+              classCode: state.pathParameters['id']!,
+            ),
           ),
         ),
         GoRoute(
@@ -96,15 +102,18 @@ class BubbleSheetApp extends StatelessWidget {
         ),
         GoRoute(
           path: '/students',
-          builder: (context, state) => const MainLayout(child: StudentListScreen()),
+          builder: (context, state) =>
+              const MainLayout(child: StudentListScreen()),
         ),
         GoRoute(
           path: '/students/new',
-          builder: (context, state) => const MainLayout(child: StudentFormScreen()),
+          builder: (context, state) =>
+              const MainLayout(child: StudentFormScreen()),
         ),
         GoRoute(
           path: '/students/importStudent',
-          builder: (context, state) => const MainLayout(child: StudentImportScreen()),
+          builder: (context, state) =>
+              const MainLayout(child: StudentImportScreen()),
         ),
         // Route cụ thể phải được định nghĩa TRƯỚC route tổng quát
         GoRoute(
@@ -127,27 +136,33 @@ class BubbleSheetApp extends StatelessWidget {
         // Answer Sheet routes
         GoRoute(
           path: '/answer-sheets',
-          builder: (context, state) => const MainLayout(child: AnswerSheetListScreen()),
+          builder: (context, state) =>
+              const MainLayout(child: AnswerSheetListScreen()),
         ),
         GoRoute(
           path: '/answer-sheets/create/name',
-          builder: (context, state) => const MainLayout(child: AnswerSheetFormNameScreen()),
+          builder: (context, state) =>
+              const MainLayout(child: AnswerSheetFormNameScreen()),
         ),
         GoRoute(
           path: '/answer-sheets/create/header',
-          builder: (context, state) => const MainLayout(child: AnswerSheetFormHeaderScreen()),
+          builder: (context, state) =>
+              const MainLayout(child: AnswerSheetFormHeaderScreen()),
         ),
         GoRoute(
           path: '/answer-sheets/create/count',
-          builder: (context, state) => const MainLayout(child: AnswerSheetFormCountScreen()),
+          builder: (context, state) =>
+              const MainLayout(child: AnswerSheetFormCountScreen()),
         ),
         GoRoute(
           path: '/answer-sheets/create/question',
-          builder: (context, state) => const MainLayout(child: AnswerSheetFormQuestionScreen()),
+          builder: (context, state) =>
+              const MainLayout(child: AnswerSheetFormQuestionScreen()),
         ),
         GoRoute(
           path: '/answer-sheets/create/preview',
-          builder: (context, state) => const MainLayout(child: AnswerSheetFormPreviewScreen()),
+          builder: (context, state) =>
+              const MainLayout(child: AnswerSheetFormPreviewScreen()),
         ),
         GoRoute(
           path: '/quizzes',
@@ -166,19 +181,22 @@ class BubbleSheetApp extends StatelessWidget {
         GoRoute(
           path: '/quizzes/:quizId/edit-answer-keys',
           builder: (context, state) => MainLayout(
-            child: QuizEditAnswerKeyScreen(quizId: state.pathParameters['quizId']!),
+            child: QuizEditAnswerKeyScreen(
+              quizId: state.pathParameters['quizId']!,
+            ),
           ),
         ),
         GoRoute(
           path: '/quizzes/:quizId/edit',
           builder: (context, state) {
             final quizId = state.pathParameters['quizId']!;
-            final examProvider = Provider.of<ExamProvider>(context, listen: false);
+            final examProvider = Provider.of<ExamProvider>(
+              context,
+              listen: false,
+            );
             final quizList = examProvider.exams.where((e) => e.id == quizId);
             final quiz = quizList.isNotEmpty ? quizList.first : null;
-            return MainLayout(
-              child: QuizFormScreen(quiz: quiz),
-            );
+            return MainLayout(child: QuizFormScreen(quiz: quiz));
           },
         ),
       ],
@@ -202,6 +220,3 @@ class BubbleSheetApp extends StatelessWidget {
     );
   }
 }
-
-
-

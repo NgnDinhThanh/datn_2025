@@ -239,7 +239,7 @@ class _StudentListScreenState extends State<StudentListScreen> {
 
         return Center(
           child: Container(
-            constraints: const BoxConstraints(maxWidth: 1100),
+            constraints: const BoxConstraints(maxWidth: 1200),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
@@ -372,7 +372,7 @@ class _StudentListScreenState extends State<StudentListScreen> {
                       4: FixedColumnWidth(120),
                       5: FixedColumnWidth(80),
                       6: FixedColumnWidth(80),
-                      7: FixedColumnWidth(80),
+                      // 7: FixedColumnWidth(80),
                     },
                     children: [
                       TableRow(
@@ -409,88 +409,156 @@ class _StudentListScreenState extends State<StudentListScreen> {
                             ),
                           ),
                           TableCell(
+                            verticalAlignment:
+                                TableCellVerticalAlignment.middle,
                             child: InkWell(
-                              onTap: () => _onSort('student_id'),
+                              onTap: () {
+                                setState(() {
+                                  if (_sortField == 'student_id') {
+                                    _sortAsc = !_sortAsc;
+                                  } else {
+                                    _sortField = 'student_id';
+                                    _sortAsc = true;
+                                  }
+                                });
+                              },
                               child: Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
                                   const Text('ID'),
+                                  const SizedBox(width: 4),
                                   Icon(
-                                    _sortField == 'student_id'
-                                        ? (_sortAsc
-                                              ? Icons.arrow_upward
-                                              : Icons.arrow_downward)
-                                        : Icons.import_export,
+                                    Icons.arrow_upward,
                                     size: 16,
                                     color: _sortField == 'student_id'
-                                        ? Colors.blue
-                                        : Colors.grey,
+                                        ? (_sortAsc ? Colors.blue : Colors.grey)
+                                        : Colors.grey.shade400,
+                                  ),
+                                  Icon(
+                                    Icons.arrow_downward,
+                                    size: 16,
+                                    color: _sortField == 'student_id'
+                                        ? (!_sortAsc
+                                              ? Colors.blue
+                                              : Colors.grey)
+                                        : Colors.grey.shade400,
                                   ),
                                 ],
                               ),
                             ),
                           ),
                           TableCell(
+                            verticalAlignment:
+                                TableCellVerticalAlignment.middle,
                             child: InkWell(
-                              onTap: () => _onSort('first_name'),
+                              onTap: () {
+                                setState(() {
+                                  if (_sortField == 'first_name') {
+                                    _sortAsc = !_sortAsc;
+                                  } else {
+                                    _sortField = 'first_name';
+                                    _sortAsc = true;
+                                  }
+                                });
+                              },
                               child: Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
                                   const Text('First Name'),
+                                  const SizedBox(width: 4),
                                   Icon(
-                                    _sortField == 'first_name'
-                                        ? (_sortAsc
-                                              ? Icons.arrow_upward
-                                              : Icons.arrow_downward)
-                                        : Icons.import_export,
+                                    Icons.arrow_upward,
                                     size: 16,
                                     color: _sortField == 'first_name'
-                                        ? Colors.blue
-                                        : Colors.grey,
+                                        ? (_sortAsc ? Colors.blue : Colors.grey)
+                                        : Colors.grey.shade400,
+                                  ),
+                                  Icon(
+                                    Icons.arrow_downward,
+                                    size: 16,
+                                    color: _sortField == 'first_name'
+                                        ? (!_sortAsc
+                                              ? Colors.blue
+                                              : Colors.grey)
+                                        : Colors.grey.shade400,
                                   ),
                                 ],
                               ),
                             ),
                           ),
                           TableCell(
+                            verticalAlignment:
+                                TableCellVerticalAlignment.middle,
                             child: InkWell(
-                              onTap: () => _onSort('last_name'),
+                              onTap: () {
+                                setState(() {
+                                  if (_sortField == 'last_name') {
+                                    _sortAsc = !_sortAsc;
+                                  } else {
+                                    _sortField = 'last_name';
+                                    _sortAsc = true;
+                                  }
+                                });
+                              },
                               child: Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
                                   const Text('Last Name'),
+                                  const SizedBox(width: 4),
                                   Icon(
-                                    _sortField == 'last_name'
-                                        ? (_sortAsc
-                                              ? Icons.arrow_upward
-                                              : Icons.arrow_downward)
-                                        : Icons.import_export,
+                                    Icons.arrow_upward,
                                     size: 16,
                                     color: _sortField == 'last_name'
-                                        ? Colors.blue
-                                        : Colors.grey,
+                                        ? (_sortAsc ? Colors.blue : Colors.grey)
+                                        : Colors.grey.shade400,
+                                  ),
+                                  Icon(
+                                    Icons.arrow_downward,
+                                    size: 16,
+                                    color: _sortField == 'last_name'
+                                        ? (!_sortAsc
+                                              ? Colors.blue
+                                              : Colors.grey)
+                                        : Colors.grey.shade400,
                                   ),
                                 ],
                               ),
                             ),
                           ),
                           TableCell(
+                            verticalAlignment:
+                                TableCellVerticalAlignment.middle,
                             child: InkWell(
-                              onTap: () => _onSort('classes'),
+                              onTap: () {
+                                setState(() {
+                                  if (_sortField == 'classes') {
+                                    _sortAsc = !_sortAsc;
+                                  } else {
+                                    _sortField = 'classes';
+                                    _sortAsc = true;
+                                  }
+                                });
+                              },
                               child: Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
                                   const Text('Classes'),
+                                  const SizedBox(width: 4),
                                   Icon(
-                                    _sortField == 'classes'
-                                        ? (_sortAsc
-                                              ? Icons.arrow_upward
-                                              : Icons.arrow_downward)
-                                        : Icons.import_export,
+                                    Icons.arrow_upward,
                                     size: 16,
                                     color: _sortField == 'classes'
-                                        ? Colors.blue
-                                        : Colors.grey,
+                                        ? (_sortAsc ? Colors.blue : Colors.grey)
+                                        : Colors.grey.shade400,
+                                  ),
+                                  Icon(
+                                    Icons.arrow_downward,
+                                    size: 16,
+                                    color: _sortField == 'classes'
+                                        ? (!_sortAsc
+                                              ? Colors.blue
+                                              : Colors.grey)
+                                        : Colors.grey.shade400,
                                   ),
                                 ],
                               ),

@@ -244,6 +244,30 @@ class _ClassEditScreenState extends State<ClassEditScreen> {
                             : const Text('Delete Class'),
                       ),
                     ),
+                    const SizedBox(height: 16),
+                    SizedBox(
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.grey.shade600,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          textStyle: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          elevation: 0, // neutral, không nổi quá
+                        ),
+                        onPressed: () {
+                          context.go('/classes');
+                        },
+                        child: const Text('Cancel'),
+                      ),
+                    ),
+
+
                   ],
                 ),
               ),
