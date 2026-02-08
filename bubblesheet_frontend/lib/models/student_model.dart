@@ -19,9 +19,10 @@ class Student {
       studentId: json['student_id'].toString(),
       firstName: json['first_name'] ?? '',
       lastName: json['last_name'] ?? '',
-      classCodes: (json['class_codes'] as List<dynamic>?)
-          ?.map((e) => e.toString())
-          .toList() ??
+      classCodes:
+          (json['class_codes'] as List<dynamic>?)
+              ?.map((e) => e.toString())
+              .toList() ??
           [],
     );
   }

@@ -15,13 +15,16 @@ import '../providers/class_provider.dart';
 
 class ClassDetailScreen extends StatefulWidget {
   final ClassModel classModel;
-  const ClassDetailScreen({Key? key, required this.classModel}) : super(key: key);
+
+  const ClassDetailScreen({Key? key, required this.classModel})
+    : super(key: key);
 
   @override
   State<ClassDetailScreen> createState() => _ClassDetailScreenState();
 }
 
-class _ClassDetailScreenState extends State<ClassDetailScreen> with SingleTickerProviderStateMixin {
+class _ClassDetailScreenState extends State<ClassDetailScreen>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
   late ClassModel _classModel;
   bool _updated = false;
@@ -39,13 +42,20 @@ class _ClassDetailScreenState extends State<ClassDetailScreen> with SingleTicker
     });
     _classModel = widget.classModel;
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      Provider.of<StudentProvider>(context, listen: false).fetchStudents(context);
+      Provider.of<StudentProvider>(
+        context,
+        listen: false,
+      ).fetchStudents(context);
       Provider.of<ExamProvider>(context, listen: false).fetchExams(context);
     });
   }
+
   Future<void> _refreshClassDetail() async {
     final token = Provider.of<AuthProvider>(context, listen: false).token;
-    final newDetail = await ClassService.getClassDetail(_classModel.class_code, token);
+    final newDetail = await ClassService.getClassDetail(
+      _classModel.class_code,
+      token,
+    );
     setState(() {
       _classModel = newDetail;
     });
@@ -57,17 +67,27 @@ class _ClassDetailScreenState extends State<ClassDetailScreen> with SingleTicker
     super.dispose();
   }
 
-
   List<Student> _filterAndSort(List<Student> students) {
     // Lọc theo classId
-    List<Student> filtered = students.where((s) => s.classCodes.contains(_classModel.id)).toList();
+    List<Student> filtered = students
+        .where((s) => s.classCodes.contains(_classModel.id))
+        .toList();
     // Search
     if (_studentSearch.isNotEmpty) {
-      filtered = filtered.where((s) =>
-        s.firstName.toLowerCase().contains(_studentSearch.toLowerCase()) ||
-        s.lastName.toLowerCase().contains(_studentSearch.toLowerCase()) ||
-        s.studentId.toLowerCase().contains(_studentSearch.toLowerCase())
-      ).toList();
+      filtered = filtered
+          .where(
+            (s) =>
+                s.firstName.toLowerCase().contains(
+                  _studentSearch.toLowerCase(),
+                ) ||
+                s.lastName.toLowerCase().contains(
+                  _studentSearch.toLowerCase(),
+                ) ||
+                s.studentId.toLowerCase().contains(
+                  _studentSearch.toLowerCase(),
+                ),
+          )
+          .toList();
     }
     // Sort
     switch (_sortKey) {
@@ -84,15 +104,20 @@ class _ClassDetailScreenState extends State<ClassDetailScreen> with SingleTicker
     return filtered;
   }
 
-  List<ExamModel>_filterAndSortQuiz(List<ExamModel> exams) {
+  List<ExamModel> _filterAndSortQuiz(List<ExamModel> exams) {
     // Lọc theo classId
-    List<ExamModel> filtered = exams.where((s) => s.class_codes.contains(_classModel.class_code)).toList();
+    List<ExamModel> filtered = exams
+        .where((s) => s.class_codes.contains(_classModel.class_code))
+        .toList();
     // Search
     if (_quizSearch.isNotEmpty) {
-      filtered = filtered.where((s) =>
-      s.date.toLowerCase().contains(_quizSearch.toLowerCase()) ||
-          s.name.toLowerCase().contains(_quizSearch.toLowerCase())
-      ).toList();
+      filtered = filtered
+          .where(
+            (s) =>
+                s.date.toLowerCase().contains(_quizSearch.toLowerCase()) ||
+                s.name.toLowerCase().contains(_quizSearch.toLowerCase()),
+          )
+          .toList();
     }
     // Sort
     switch (_sortKey) {
@@ -115,6 +140,7 @@ class _ClassDetailScreenState extends State<ClassDetailScreen> with SingleTicker
       },
       child: Scaffold(
         appBar: AppBar(
+          backgroundColor: const Color(0xFF2E7D32),
           title: Text('Class: ${_classModel.class_name}'),
           actions: [
             IconButton(
@@ -134,6 +160,9 @@ class _ClassDetailScreenState extends State<ClassDetailScreen> with SingleTicker
             ),
           ],
           bottom: TabBar(
+            indicatorColor: Color(0xFF2E7D32),
+            labelColor: Colors.white,
+            unselectedLabelColor: Colors.grey,
             controller: _tabController,
             tabs: const [
               Tab(text: 'Students'),
@@ -151,19 +180,37 @@ class _ClassDetailScreenState extends State<ClassDetailScreen> with SingleTicker
                   return const Center(child: CircularProgressIndicator());
                 }
                 if (provider.error != null) {
-                  return Center(child: Text('Error: ${provider.error}', style: const TextStyle(color: Colors.red)));
+                  return Center(
+                    child: Text(
+                      'Error: ${provider.error}',
+                      style: const TextStyle(color: Colors.red),
+                    ),
+                  );
                 }
                 final students = _filterAndSort(provider.students);
                 return Column(
                   children: [
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
                       child: Row(
                         children: [
-                          DropdownButton<String>(
-                            value: _sortKey,
-                            items: _sortOptions.map((e) => DropdownMenuItem(value: e, child: Text('Sort\n$e'))).toList(),
-                            onChanged: (v) => setState(() => _sortKey = v ?? 'Last Name'),
+                          SizedBox(
+                            child: DropdownButton<String>(
+                              value: _sortKey,
+                              items: _sortOptions
+                                  .map(
+                                    (e) => DropdownMenuItem(
+                                      value: e,
+                                      child: Text('Sort by $e'),
+                                    ),
+                                  )
+                                  .toList(),
+                              onChanged: (v) =>
+                                  setState(() => _sortKey = v ?? 'Last Name'),
+                            ),
                           ),
                           const SizedBox(width: 12),
                           Expanded(
@@ -172,14 +219,17 @@ class _ClassDetailScreenState extends State<ClassDetailScreen> with SingleTicker
                                 labelText: 'Search',
                                 border: OutlineInputBorder(),
                               ),
-                              onChanged: (v) => setState(() => _studentSearch = v),
+                              onChanged: (v) =>
+                                  setState(() => _studentSearch = v),
                             ),
                           ),
                         ],
                       ),
                     ),
                     if (students.isEmpty)
-                      const Expanded(child: Center(child: Text('No students found.')))
+                      const Expanded(
+                        child: Center(child: Text('No students found.')),
+                      )
                     else
                       Expanded(
                         child: ListView.separated(
@@ -188,11 +238,21 @@ class _ClassDetailScreenState extends State<ClassDetailScreen> with SingleTicker
                           itemBuilder: (context, i) {
                             final s = students[i];
                             return ListTile(
-                              title: Text('${s.firstName} ${s.lastName}', style: const TextStyle(fontWeight: FontWeight.bold)),
+                              title: Text(
+                                '${s.firstName} ${s.lastName}',
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
                               subtitle: Text('ID: ${s.studentId}'),
                               onTap: () {
-                                Navigator.push(context,
-                                    MaterialPageRoute(builder: (_) => StudentDetailScreen(student: s)));
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) =>
+                                        StudentDetailScreen(student: s),
+                                  ),
+                                );
                               },
                             );
                           },
@@ -209,20 +269,38 @@ class _ClassDetailScreenState extends State<ClassDetailScreen> with SingleTicker
                   return const Center(child: CircularProgressIndicator());
                 }
                 if (provider.error != null) {
-                  return Center(child: Text('Error: \\${provider.error}', style: const TextStyle(color: Colors.red)));
+                  return Center(
+                    child: Text(
+                      'Error: \\${provider.error}',
+                      style: const TextStyle(color: Colors.red),
+                    ),
+                  );
                 }
                 final exams = _filterAndSortQuiz(provider.exams);
-                final classCodeToName = Provider.of<ClassProvider>(context).classCodeToName;
+                final classCodeToName = Provider.of<ClassProvider>(
+                  context,
+                ).classCodeToName;
                 return Column(
                   children: [
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
                       child: Row(
                         children: [
                           DropdownButton<String>(
                             value: _sortKey,
-                            items: _sortOptions.map((e) => DropdownMenuItem(value: e, child: Text('Sort\n$e'))).toList(),
-                            onChanged: (v) => setState(() => _sortKey = v ?? 'Date'),
+                            items: _sortOptions
+                                .map(
+                                  (e) => DropdownMenuItem(
+                                    value: e,
+                                    child: Text('Sort by $e'),
+                                  ),
+                                )
+                                .toList(),
+                            onChanged: (v) =>
+                                setState(() => _sortKey = v ?? 'Date'),
                           ),
                           const SizedBox(width: 12),
                           Expanded(
@@ -238,7 +316,9 @@ class _ClassDetailScreenState extends State<ClassDetailScreen> with SingleTicker
                       ),
                     ),
                     if (exams.isEmpty)
-                      const Expanded(child: Center(child: Text('No exams found.')))
+                      const Expanded(
+                        child: Center(child: Text('No exams found.')),
+                      )
                     else
                       Expanded(
                         child: ListView.separated(
@@ -251,27 +331,50 @@ class _ClassDetailScreenState extends State<ClassDetailScreen> with SingleTicker
                               child: ListTile(
                                 contentPadding: const EdgeInsets.all(16),
                                 title: Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
                                   children: [
                                     Expanded(
-                                        child: Text('${s.name}', style: const TextStyle(fontWeight: FontWeight.bold))),
-                                    Text('Papers: ${s.papers?.length ?? 0}', style: TextStyle(color: Colors.grey[600], fontSize: 14)),
+                                      child: Text(
+                                        '${s.name}',
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ),
+                                    Text(
+                                      'Papers: ${s.papers?.length ?? 0}',
+                                      style: TextStyle(
+                                        color: Colors.grey[600],
+                                        fontSize: 14,
+                                      ),
+                                    ),
                                   ],
                                 ),
                                 subtitle: Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
                                   children: [
                                     Expanded(
-                                      child: Text(s.class_codes
-                                          .map((code) => classCodeToName[code] ?? code)
-                                          .join(', '),),
+                                      child: Text(
+                                        s.class_codes
+                                            .map(
+                                              (code) =>
+                                                  classCodeToName[code] ?? code,
+                                            )
+                                            .join(', '),
+                                      ),
                                     ),
                                     Text(s.date),
                                   ],
                                 ),
                                 onTap: () {
-                                  Navigator.push(context,
-                                      MaterialPageRoute(builder: (_) => QuizDetailScreen(quiz: s)));
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => QuizDetailScreen(quiz: s),
+                                    ),
+                                  );
                                 },
                               ),
                             );
@@ -292,11 +395,18 @@ class _ClassDetailScreenState extends State<ClassDetailScreen> with SingleTicker
                     builder: (_) => StudentFormDialog(),
                   );
                 },
-                icon: const Icon(Icons.person_add),
-                label: const Text('New Student'),
+                backgroundColor: const Color(0xFF2E7D32),
+                icon: const Icon(Icons.person_add, color: Colors.white),
+                label: const Text(
+                  'New Student',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               )
             : null,
       ),
     );
   }
-} 
+}

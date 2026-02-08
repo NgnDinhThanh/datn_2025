@@ -26,7 +26,6 @@ class _ClassListScreenState extends State<ClassListScreen> {
   final List<int> _pageSizeOptions = [10, 25, 50, 100];
   final TextEditingController _searchController = TextEditingController();
 
-  // ScrollController cho cuộn ngang bảng
   final ScrollController _horizontalController = ScrollController();
 
   @override

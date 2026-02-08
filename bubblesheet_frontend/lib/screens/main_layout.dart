@@ -21,7 +21,6 @@ class _UserMenuWidgetState extends State<UserMenuWidget> {
   OverlayEntry? _overlayEntry;
   Timer? _hideTimer;
 
-  // show menu
   void _showMenu() {
     _hideTimer?.cancel();
     _hideTimer = null;
@@ -32,7 +31,6 @@ class _UserMenuWidgetState extends State<UserMenuWidget> {
     Overlay.of(context).insert(_overlayEntry!);
   }
 
-  // hide menu with delay
   void _hideMenu({Duration delay = const Duration(milliseconds: 150)}) {
     _hideTimer?.cancel();
     _hideTimer = Timer(delay, () {
@@ -43,7 +41,6 @@ class _UserMenuWidgetState extends State<UserMenuWidget> {
     });
   }
 
-  // hide menu immediately
   void _hideMenuImmediately() {
     _hideTimer?.cancel();
     _hideTimer = null;
@@ -132,7 +129,6 @@ class _UserMenuWidgetState extends State<UserMenuWidget> {
       child: MouseRegion(
         onEnter: (_) => _showMenu(),
         onExit: (_) {
-          // Đóng menu khi hover ra khỏi button (với delay để user có thể di chuyển sang menu)
           _hideMenu();
         },
         child: Padding(
@@ -160,7 +156,6 @@ class _UserMenuWidgetState extends State<UserMenuWidget> {
   }
 }
 
-// Widget for menu item
 class _MenuItem extends StatelessWidget {
   final IconData icon;
   final String label;
@@ -194,7 +189,6 @@ class _MenuItem extends StatelessWidget {
   }
 }
 
-// Logo Widget
 class AppLogoWidget extends StatelessWidget {
   const AppLogoWidget({super.key});
 
@@ -237,19 +231,21 @@ class MainLayout extends StatefulWidget {
 
   const MainLayout({super.key, required this.child, this.currentPath});
 
-  static const List<String> _tabTitles = [
+  static List<String> _tabTitles(bool isAdmin) => [
     "Quizzes",
     "Classes",
     "Students",
     "Answer Sheets",
+    if (isAdmin) "Admin",
     "My Account",
   ];
 
-  static const List<String> _tabRoutes = [
+  static List<String> _tabRoutes(bool isAdmin) => [
     "/quizzes",
     "/classes",
     "/students",
     "/answer-sheets",
+    if (isAdmin) "/admin",
     "/user",
   ];
 
@@ -268,7 +264,6 @@ class _MainLayoutState extends State<MainLayout> {
 
   @override
   Widget build(BuildContext context) {
-    // Provide context to ApiService for 401 handling (logout + navigate)
     ApiService.setContext(context);
     final currentUser = context.watch<AuthProvider>().currentUser ?? '';
     String resolvedPath = widget.currentPath ?? '';
@@ -279,8 +274,11 @@ class _MainLayoutState extends State<MainLayout> {
       resolvedPath = state?.uri.toString() ?? '/';
     }
 
-    int selectedIndex = MainLayout._tabRoutes.indexWhere(
-      (route) => resolvedPath.contains(route),
+    final isAdmin = context.watch<AuthProvider>().isAdmin;
+    final tabRoutes = MainLayout._tabRoutes(isAdmin);
+    final tabTitles = MainLayout._tabTitles(isAdmin);
+    int selectedIndex = tabRoutes.indexWhere(
+      (route) => resolvedPath.startsWith(route) || resolvedPath == route,
     );
     if (selectedIndex == -1) selectedIndex = 0;
 
@@ -310,7 +308,7 @@ class _MainLayoutState extends State<MainLayout> {
             color: Colors.grey[200],
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
-              children: List.generate(MainLayout._tabTitles.length, (index) {
+              children: List.generate(tabTitles.length, (index) {
                 return TextButton(
                   style: TextButton.styleFrom(
                     padding: const EdgeInsets.symmetric(
@@ -321,14 +319,12 @@ class _MainLayoutState extends State<MainLayout> {
                   onPressed: () {
                     final router = GoRouter.maybeOf(context);
                     if (router == null) return;
-                    if (index == 0) {
-                      router.go('/quizzes');
-                    } else if (selectedIndex != index) {
-                      router.go(MainLayout._tabRoutes[index]);
+                    if (selectedIndex != index) {
+                      router.go(tabRoutes[index]);
                     }
                   },
                   child: Text(
-                    MainLayout._tabTitles[index],
+                    tabTitles[index],
                     style: TextStyle(
                       fontWeight: selectedIndex == index
                           ? FontWeight.bold

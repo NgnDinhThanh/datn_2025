@@ -27,13 +27,19 @@ class _QuizzListScreenState extends State<QuizzListScreen> {
   final List<int> _pageSizeOptions = [10, 25, 50, 100];
   final TextEditingController _searchController = TextEditingController();
 
-  // ScrollController cho cuộn ngang bảng
   final ScrollController _horizontalController = ScrollController();
 
   @override
   void initState() {
     super.initState();
-    Future.microtask(() => context.read<ExamProvider>().fetchExams(context));
+    Future.microtask(() async {
+      await context.read<ExamProvider>().fetchExams(context);
+
+      final classProvider = context.read<ClassProvider>();
+      if (classProvider.classes.isEmpty) {
+        await classProvider.fetchClasses(context);
+      }
+    });
   }
 
   @override
@@ -78,12 +84,15 @@ class _QuizzListScreenState extends State<QuizzListScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final classProvider = Provider.of<ClassProvider>(context, listen: false);
+    final classProvider = Provider.of<ClassProvider>(context);
     final Map<String, String> classCodeToName = {
       for (var c in classProvider.classes) c.class_code: c.class_name,
     };
     return Consumer<ExamProvider>(
       builder: (context, examProvider, child) {
+        if (classProvider.isLoading && classProvider.classes.isEmpty) {
+          return const Center(child: CircularProgressIndicator());
+        }
         if (examProvider.isLoading) {
           return const Center(child: CircularProgressIndicator());
         }
@@ -115,7 +124,7 @@ class _QuizzListScreenState extends State<QuizzListScreen> {
 
         return Center(
           child: Container(
-            constraints: const BoxConstraints(maxWidth: 1100),
+            constraints: const BoxConstraints(maxWidth: 1200),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [

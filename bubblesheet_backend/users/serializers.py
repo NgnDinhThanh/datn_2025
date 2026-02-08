@@ -12,6 +12,7 @@ class UserSerializer(serializers.Serializer):
     email = serializers.EmailField(required=False)
     password = serializers.CharField(write_only=True, required=False)
     is_teacher = serializers.BooleanField(default=True, required=False)
+    is_admin = serializers.BooleanField(default=False, required=False)
 
 
     def to_representation(self, instance):

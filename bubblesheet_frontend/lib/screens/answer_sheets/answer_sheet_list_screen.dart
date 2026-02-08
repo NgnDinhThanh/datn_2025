@@ -29,13 +29,10 @@ class _AnswerSheetListScreenState extends State<AnswerSheetListScreen> {
   Timer? _debounce;
   List<AnswerSheet> _filteredSheets = [];
 
-  // Helper function to sanitize filename
   String _sanitizeFilename(String name) {
-    // Replace invalid characters with underscore
     return name.replaceAll(RegExp(r'[^\w\s-]'), '_').trim();
   }
 
-  // Helper function to download file on web
   Future<void> _downloadFile(Uint8List bytes, String filename) async {
     if (!kIsWeb) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -47,16 +44,13 @@ class _AnswerSheetListScreenState extends State<AnswerSheetListScreen> {
     }
 
     try {
-      // Create blob from response bytes
       final blob = html.Blob([bytes]);
       final blobUrl = html.Url.createObjectUrlFromBlob(blob);
 
-      // Create anchor element and trigger download
       final anchor = html.AnchorElement(href: blobUrl)
         ..setAttribute('download', filename)
         ..click();
 
-      // Clean up
       html.Url.revokeObjectUrl(blobUrl);
 
       ScaffoldMessenger.of(
@@ -72,7 +66,6 @@ class _AnswerSheetListScreenState extends State<AnswerSheetListScreen> {
   final List<int> _pageSizeOptions = [10, 25, 50, 100];
   final TextEditingController _searchController = TextEditingController();
 
-  // ScrollController cho cuộn ngang bảng
   final ScrollController _horizontalController = ScrollController();
 
   final dateFormat = DateFormat('yyyy-MM-dd');
@@ -80,7 +73,6 @@ class _AnswerSheetListScreenState extends State<AnswerSheetListScreen> {
   @override
   void initState() {
     super.initState();
-    // Gọi lại API mỗi khi vào màn hình này
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<AnswerSheetProvider>().fetchAnswerSheets(context);
     });
@@ -164,7 +156,6 @@ class _AnswerSheetListScreenState extends State<AnswerSheetListScreen> {
           _filteredSheets = List<AnswerSheet>.from(sheets);
         }
 
-        // Lọc và phân trang
         final int total = _filteredSheets.length;
         final int totalPages = (total / _pageSize).ceil();
         final int start = total == 0 ? 0 : (_currentPage - 1) * _pageSize + 1;
@@ -180,7 +171,7 @@ class _AnswerSheetListScreenState extends State<AnswerSheetListScreen> {
 
         return Center(
           child: Container(
-            constraints: const BoxConstraints(maxWidth: 1100),
+            constraints: const BoxConstraints(maxWidth: 1200),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
@@ -208,7 +199,6 @@ class _AnswerSheetListScreenState extends State<AnswerSheetListScreen> {
                   padding: const EdgeInsets.symmetric(horizontal: 24.0),
                   child: Row(
                     children: [
-                      // Show entries
                       Row(
                         children: [
                           const Text('Show '),

@@ -86,12 +86,11 @@ class _AnswerSheetFormQuestionScreenState
           formProvider.toApiJson(),
           token,
         );
-        // Fetch lại danh sách answer sheet trước khi chuyển route
         await Provider.of<AnswerSheetProvider>(
           context,
           listen: false,
         ).fetchAnswerSheets(context);
-        Navigator.of(context).pop(); // Đóng loading
+        Navigator.of(context).pop();
         formProvider.reset();
         context.go('/answer-sheets');
         ScaffoldMessenger.of(
@@ -125,7 +124,6 @@ class _AnswerSheetFormQuestionScreenState
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Cột trái: cấu hình và danh sách câu hỏi (cuộn)
                 Expanded(
                   flex: 2,
                   child: Column(
@@ -154,7 +152,6 @@ class _AnswerSheetFormQuestionScreenState
                             onChanged: (val) {
                               if (val != null) {
                                 formProvider.setNumQuestions(val);
-                                // Cập nhật danh sách câu hỏi
                                 final newQuestions = List.generate(
                                   val,
                                   (i) => QuestionField(
@@ -185,7 +182,6 @@ class _AnswerSheetFormQuestionScreenState
                             onChanged: (val) {
                               if (val != null) {
                                 formProvider.setNumOptions(val);
-                                // Cập nhật nhãn đáp án cho từng câu
                                 final updatedQuestions = formProvider.questions
                                     .map(
                                       (q) => QuestionField(
@@ -207,7 +203,6 @@ class _AnswerSheetFormQuestionScreenState
                         style: TextStyle(fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 8),
-                      // Danh sách câu hỏi (cuộn)
                       SizedBox(
                         height: 300,
                         child: ListView.builder(
@@ -228,7 +223,6 @@ class _AnswerSheetFormQuestionScreenState
                                                 formProvider.questions,
                                               );
                                           newList.removeAt(i);
-                                          // Đánh lại số thứ tự
                                           for (
                                             int j = 0;
                                             j < newList.length;
@@ -243,7 +237,7 @@ class _AnswerSheetFormQuestionScreenState
                                           formProvider.setQuestions(newList);
                                           formProvider.setNumQuestions(
                                             newList.length,
-                                          ); // Giảm số lượng câu hỏi
+                                          );
                                         }
                                       : null,
                                 ),

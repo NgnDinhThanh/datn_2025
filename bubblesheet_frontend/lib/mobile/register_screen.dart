@@ -26,14 +26,20 @@ class _RegisterScreenState extends State<RegisterScreen> {
   }
 
   Future<void> _register() async {
-    if (_usernameController.text.isEmpty || 
-        _emailController.text.isEmpty || 
+    if (_usernameController.text.isEmpty ||
+        _emailController.text.isEmpty ||
         _passwordController.text.isEmpty) {
-      setState(() { _error = 'Please fill in all fields'; });
+      setState(() {
+        _error = 'Please fill in all fields';
+      });
       return;
     }
 
-    setState(() { _isLoading = true; _error = null; _success = null; });
+    setState(() {
+      _isLoading = true;
+      _error = null;
+      _success = null;
+    });
     try {
       final res = await ApiService.register(
         _usernameController.text.trim(),
@@ -41,7 +47,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
         _passwordController.text,
       );
       if (res['statusCode'] == 201) {
-        setState(() { _success = 'Register successful! Please login.'; });
+        setState(() {
+          _success = 'Register successful! Please login.';
+        });
         await Future.delayed(const Duration(seconds: 1));
         if (mounted) {
           Navigator.pushReplacement(
@@ -50,12 +58,18 @@ class _RegisterScreenState extends State<RegisterScreen> {
           );
         }
       } else {
-        setState(() { _error = res['body']['error']?.toString() ?? 'Register failed'; });
+        setState(() {
+          _error = res['body']['error']?.toString() ?? 'Register failed';
+        });
       }
     } catch (e) {
-      setState(() { _error = e.toString(); });
+      setState(() {
+        _error = e.toString();
+      });
     } finally {
-      setState(() { _isLoading = false; });
+      setState(() {
+        _isLoading = false;
+      });
     }
   }
 
@@ -69,19 +83,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: true,
       body: SafeArea(
-        child: Padding(
+        child: SingleChildScrollView(
           padding: const EdgeInsets.all(24.0),
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              const SizedBox(height: 48),
               const Text(
                 'Create Account',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 32),
@@ -130,6 +142,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
               ElevatedButton(
                 onPressed: _isLoading ? null : _register,
                 style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.green,
+                  foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 16),
                 ),
                 child: _isLoading
@@ -151,4 +165,4 @@ class _RegisterScreenState extends State<RegisterScreen> {
       ),
     );
   }
-} 
+}

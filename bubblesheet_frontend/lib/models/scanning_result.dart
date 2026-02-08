@@ -11,7 +11,8 @@ class ScanningResult {
   final String versionCode;
   final String? annotatedImageBase64;
   final String? warpedImageBase64; // Raw warped image for re-annotation
-  final String? infoSectionBase64; // Cropped info section (student/quiz/class IDs)
+  final String?
+  infoSectionBase64; // Cropped info section (student/quiz/class IDs)
   final String? error;
   final int multipleMarks; // Count of questions with multiple bubbles marked
   final int blankCount; // Count of questions with no answer
@@ -80,7 +81,7 @@ class ScanningResult {
       'blank_count': blankCount,
     };
   }
-  
+
   /// Create a copy with updated fields
   ScanningResult copyWith({
     bool? success,
@@ -152,8 +153,3 @@ class PreviewCheckResult {
     );
   }
 }
-
-
-
-
-

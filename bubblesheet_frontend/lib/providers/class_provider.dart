@@ -36,7 +36,6 @@ class ClassProvider with ChangeNotifier {
       final cached = ClassCacheService.getCachedClasses();
       if (cached != null && cached.isNotEmpty) {
         _classes = cached.map((json) => ClassModel.fromJson(json)).toList();
-        // ✅ Merge với pending CRUD operations
         _mergePendingCrudOperations();
         _isLoading = false;
         notifyListeners();
@@ -54,7 +53,6 @@ class ClassProvider with ChangeNotifier {
           await ClassCacheService.cacheClasses(
             _classes.map((c) => c.toJson()).toList(),
           );
-          // ✅ Merge với pending CRUD operations sau khi fetch từ API
           _mergePendingCrudOperations();
           _error = null;
           notifyListeners();
@@ -82,7 +80,6 @@ class ClassProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  /// Merge pending CRUD operations vào danh sách classes hiện tại
   void _mergePendingCrudOperations() {
     try {
       final pendingOps = CrudOperationsQueueService.getPendingOperations()
@@ -145,23 +142,19 @@ class ClassProvider with ChangeNotifier {
       throw Exception('Not authenticated');
     }
 
-    // ✅ Check network
     final hasNetwork = await SyncService.hasNetworkConnection();
 
     if (hasNetwork) {
-      // ✅ Online: Gọi API ngay
       try {
         await ClassService.createClass(classData, token);
         await fetchClasses(context);
       } catch (e) {
-        // Nếu API fail, queue lại
         await CrudOperationsQueueService.addOperation(
           type: 'CREATE',
           entity: 'Class',
           entityId: null,
           data: classData,
         );
-        // Optimistic UI: Add vào local list
         _classes.add(
           ClassModel(
             id: 'temp_${DateTime.now().millisecondsSinceEpoch}',
@@ -169,7 +162,6 @@ class ClassProvider with ChangeNotifier {
             class_name: classData['class_name'] ?? '',
             student_count: 0,
             teacher_id: '',
-            // Server sẽ tự động set từ token
             exam_ids: [],
             student_ids: [],
           ),
@@ -177,14 +169,12 @@ class ClassProvider with ChangeNotifier {
         notifyListeners();
       }
     } else {
-      // ✅ Offline: Queue operation
       await CrudOperationsQueueService.addOperation(
         type: 'CREATE',
         entity: 'Class',
         entityId: null,
         data: classData,
       );
-      // Optimistic UI: Add vào local list
       _classes.add(
         ClassModel(
           id: 'temp_${DateTime.now().millisecondsSinceEpoch}',
@@ -192,7 +182,6 @@ class ClassProvider with ChangeNotifier {
           class_name: classData['class_name'] ?? '',
           student_count: 0,
           teacher_id: '',
-          // Server sẽ tự động set từ token
           exam_ids: [],
           student_ids: [],
         ),
@@ -211,23 +200,19 @@ class ClassProvider with ChangeNotifier {
       throw Exception('Not authenticated');
     }
 
-    // ✅ Check network
     final hasNetwork = await SyncService.hasNetworkConnection();
 
     if (hasNetwork) {
-      // ✅ Online: Gọi API ngay
       try {
         await ClassService.updateClass(classId, classData, token);
         await fetchClasses(context);
       } catch (e) {
-        // Nếu API fail, queue lại
         await CrudOperationsQueueService.addOperation(
           type: 'UPDATE',
           entity: 'Class',
           entityId: classId,
           data: classData,
         );
-        // Optimistic UI: Update local list
         final index = _classes.indexWhere((c) => c.class_code == classId);
         if (index != -1) {
           _classes[index] = ClassModel(
@@ -243,14 +228,12 @@ class ClassProvider with ChangeNotifier {
         }
       }
     } else {
-      // ✅ Offline: Queue operation
       await CrudOperationsQueueService.addOperation(
         type: 'UPDATE',
         entity: 'Class',
         entityId: classId,
         data: classData,
       );
-      // Optimistic UI: Update local list
       final index = _classes.indexWhere((c) => c.class_code == classId);
       if (index != -1) {
         _classes[index] = ClassModel(
@@ -273,35 +256,29 @@ class ClassProvider with ChangeNotifier {
       throw Exception('Not authenticated');
     }
 
-    // ✅ Check network
     final hasNetwork = await SyncService.hasNetworkConnection();
 
     if (hasNetwork) {
-      // ✅ Online: Gọi API ngay
       try {
         await ClassService.deleteClass(classId, token);
         await fetchClasses(context);
       } catch (e) {
-        // Nếu API fail, queue lại
         await CrudOperationsQueueService.addOperation(
           type: 'DELETE',
           entity: 'Class',
           entityId: classId,
           data: {},
         );
-        // Optimistic UI: Remove từ local list
         _classes.removeWhere((c) => c.class_code == classId);
         notifyListeners();
       }
     } else {
-      // ✅ Offline: Queue operation
       await CrudOperationsQueueService.addOperation(
         type: 'DELETE',
         entity: 'Class',
         entityId: classId,
         data: {},
       );
-      // Optimistic UI: Remove từ local list
       _classes.removeWhere((c) => c.class_code == classId);
       notifyListeners();
     }
@@ -315,9 +292,7 @@ class ClassProvider with ChangeNotifier {
     for (final code in classCodes) {
       try {
         await ClassService.deleteClass(code, token);
-      } catch (e) {
-        // Có thể log hoặc bỏ qua lỗi từng lớp
-      }
+      } catch (e) {}
     }
     await fetchClasses(context);
   }

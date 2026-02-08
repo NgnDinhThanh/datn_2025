@@ -35,13 +35,17 @@ class _LoginScreenState extends State<LoginScreen> {
       _emailController.text.trim(),
       _passwordController.text.trim(),
     );
-    
+
     if (result['statusCode'] == 200) {
       final userName = result['body']['user']['username'];
       final token = result['body']['token'];
-      // Lưu user và token vào Provider
-      await context.read<AuthProvider>().setCurrentUser(userName, token);
-      
+      final isAdmin = result['body']['is_admin'] ?? false;
+      await context.read<AuthProvider>().setCurrentUser(
+        userName,
+        token,
+        isAdmin: isAdmin,
+      );
+
       // Prefetch all data
       if (mounted) {
         setState(() {
@@ -49,7 +53,7 @@ class _LoginScreenState extends State<LoginScreen> {
         });
         await _prefetchAllData();
       }
-      
+
       // Điều hướng sang /user
       if (mounted) context.go('/user');
     } else {
@@ -129,7 +133,11 @@ class _LoginScreenState extends State<LoginScreen> {
                     labelText: 'Password',
                     border: const OutlineInputBorder(),
                     suffixIcon: IconButton(
-                      icon: Icon(_obscurePassword ? Icons.visibility : Icons.visibility_off),
+                      icon: Icon(
+                        _obscurePassword
+                            ? Icons.visibility
+                            : Icons.visibility_off,
+                      ),
                       onPressed: () {
                         setState(() {
                           _obscurePassword = !_obscurePassword;
@@ -147,9 +155,11 @@ class _LoginScreenState extends State<LoginScreen> {
                   width: double.infinity,
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.green,
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))
+                      backgroundColor: Colors.green,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                     ),
                     onPressed: _isLoading ? null : _handleLogin,
                     child: _isLoading

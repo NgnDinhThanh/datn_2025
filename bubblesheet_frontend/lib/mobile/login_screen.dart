@@ -27,19 +27,34 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Future<void> _login() async {
     if (_emailController.text.isEmpty || _passwordController.text.isEmpty) {
-      setState(() { _error = 'Please fill in all fields'; });
+      setState(() {
+        _error = 'Please fill in all fields';
+      });
       return;
     }
 
-    setState(() { _isLoading = true; _error = null; });
-    
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
+
     try {
-      final res = await ApiService.login(_emailController.text.trim(), _passwordController.text);
-      
+      final res = await ApiService.login(
+        _emailController.text.trim(),
+        _passwordController.text,
+      );
+
       if (res['statusCode'] == 200 && res['body']['token'] != null) {
-        await Provider.of<AuthProvider>(context, listen: false)
-            .setCurrentUser(res['body']['user'].toString(), res['body']['token']);
-        
+        final user = res['body']['user'];
+        final username = user is Map
+            ? (user['username'] ?? user.toString())
+            : user.toString();
+        final isAdmin = res['body']['is_admin'] ?? false;
+        await Provider.of<AuthProvider>(
+          context,
+          listen: false,
+        ).setCurrentUser(username, res['body']['token'], isAdmin: isAdmin);
+
         if (mounted) {
           Navigator.pushReplacement(
             context,
@@ -47,12 +62,18 @@ class _LoginScreenState extends State<LoginScreen> {
           );
         }
       } else {
-        setState(() { _error = res['body']['error']?.toString() ?? 'Login failed'; });
+        setState(() {
+          _error = res['body']['error']?.toString() ?? 'Login failed';
+        });
       }
     } catch (e) {
-      setState(() { _error = e.toString(); });
+      setState(() {
+        _error = e.toString();
+      });
     } finally {
-      setState(() { _isLoading = false; });
+      setState(() {
+        _isLoading = false;
+      });
     }
   }
 
@@ -75,42 +96,45 @@ class _LoginScreenState extends State<LoginScreen> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 SizedBox(height: MediaQuery.of(context).size.height * 0.1),
-                
+
                 // Title
                 const Text(
                   'Welcome Back!',
-                  style: TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 30),
-                
+
                 // Email Field
                 TextField(
                   controller: _emailController,
                   decoration: const InputDecoration(
                     labelText: 'Email',
                     border: OutlineInputBorder(),
-                    contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                    contentPadding: EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 12,
+                    ),
                   ),
                   keyboardType: TextInputType.emailAddress,
                 ),
                 const SizedBox(height: 12),
-                
+
                 // Password Field
                 TextField(
                   controller: _passwordController,
                   decoration: const InputDecoration(
                     labelText: 'Password',
                     border: OutlineInputBorder(),
-                    contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                    contentPadding: EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 12,
+                    ),
                   ),
                   obscureText: true,
                 ),
                 const SizedBox(height: 16),
-                
+
                 // Error Message
                 if (_error != null) ...[
                   Container(
@@ -122,17 +146,22 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     child: Text(
                       _error!,
-                      style: TextStyle(color: Colors.red.shade700, fontSize: 12),
+                      style: TextStyle(
+                        color: Colors.red.shade700,
+                        fontSize: 12,
+                      ),
                       textAlign: TextAlign.center,
                     ),
                   ),
                   const SizedBox(height: 12),
                 ],
-                
+
                 // Login Button
                 ElevatedButton(
                   onPressed: _isLoading ? null : _login,
                   style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.green,
+                    foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),
@@ -147,7 +176,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       : const Text('Login', style: TextStyle(fontSize: 16)),
                 ),
                 const SizedBox(height: 12),
-                
+
                 // Register Link
                 TextButton(
                   onPressed: _navigateToRegister,
@@ -156,7 +185,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     style: TextStyle(fontSize: 14),
                   ),
                 ),
-                
+
                 SizedBox(height: MediaQuery.of(context).size.height * 0.1),
               ],
             ),

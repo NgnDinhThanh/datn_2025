@@ -5,6 +5,7 @@ import '../providers/class_provider.dart';
 
 class ClassFormDialog extends StatefulWidget {
   final ClassModel? classModel;
+
   const ClassFormDialog({Key? key, this.classModel}) : super(key: key);
 
   @override
@@ -37,7 +38,10 @@ class _ClassFormDialogState extends State<ClassFormDialog> {
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
-    setState(() { _isLoading = true; _error = null; });
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
     try {
       final provider = Provider.of<ClassProvider>(context, listen: false);
       if (widget.classModel == null) {
@@ -53,27 +57,42 @@ class _ClassFormDialogState extends State<ClassFormDialog> {
           'class_name': _nameController.text.trim(),
           'class_code': _codeController.text.trim(), // luôn truyền mã lớp cũ
         };
-        await provider.updateClass(context, widget.classModel!.class_code, data);
+        await provider.updateClass(
+          context,
+          widget.classModel!.class_code,
+          data,
+        );
       }
       if (mounted) Navigator.of(context).pop(true);
     } catch (e) {
-      setState(() { _error = e.toString(); });
+      setState(() {
+        _error = e.toString();
+      });
     } finally {
-      setState(() { _isLoading = false; });
+      setState(() {
+        _isLoading = false;
+      });
     }
   }
 
   Future<void> _delete() async {
     if (widget.classModel == null) return;
-    setState(() { _isDeleting = true; _error = null; });
+    setState(() {
+      _isDeleting = true;
+      _error = null;
+    });
     try {
       final provider = Provider.of<ClassProvider>(context, listen: false);
       await provider.deleteClass(context, widget.classModel!.class_code);
       if (mounted) Navigator.of(context).pop('deleted');
     } catch (e) {
-      setState(() { _error = e.toString(); });
+      setState(() {
+        _error = e.toString();
+      });
     } finally {
-      setState(() { _isDeleting = false; });
+      setState(() {
+        _isDeleting = false;
+      });
     }
   }
 
@@ -93,46 +112,72 @@ class _ClassFormDialogState extends State<ClassFormDialog> {
               children: [
                 Text(
                   isEdit ? 'Edit Class' : 'New Class',
-                  style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                  style: const TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                  ),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 24),
                 TextFormField(
                   controller: _codeController,
-                  decoration: const InputDecoration(labelText: 'Class Code', border: OutlineInputBorder()),
+                  decoration: const InputDecoration(
+                    labelText: 'Class Code',
+                    border: OutlineInputBorder(),
+                  ),
                   validator: (v) => v == null || v.isEmpty ? 'Required' : null,
                   enabled: !isEdit, // Không cho sửa mã lớp khi edit
                 ),
                 const SizedBox(height: 16),
                 TextFormField(
                   controller: _nameController,
-                  decoration: const InputDecoration(labelText: 'Class Name', border: OutlineInputBorder()),
+                  decoration: const InputDecoration(
+                    labelText: 'Class Name',
+                    border: OutlineInputBorder(),
+                  ),
                   validator: (v) => v == null || v.isEmpty ? 'Required' : null,
                 ),
                 const SizedBox(height: 16),
                 if (_error != null)
                   Padding(
                     padding: const EdgeInsets.only(bottom: 8),
-                    child: Text(_error!, style: const TextStyle(color: Colors.red), textAlign: TextAlign.center),
+                    child: Text(
+                      _error!,
+                      style: const TextStyle(color: Colors.red),
+                      textAlign: TextAlign.center,
+                    ),
                   ),
-                Row(
+                Column(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     if (isEdit)
                       ElevatedButton(
                         onPressed: _isLoading ? null : _delete,
-                        style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.red,
+                        ),
                         child: const Text('DELETE'),
                       ),
                     TextButton(
-                      onPressed: _isLoading ? null : () => Navigator.of(context).pop(false),
+                      onPressed: _isLoading
+                          ? null
+                          : () => Navigator.of(context).pop(false),
                       child: const Text('CANCEL'),
                     ),
                     ElevatedButton(
                       onPressed: _isLoading ? null : _submit,
-                      style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.green,
+                      ),
                       child: _isLoading
-                          ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                          ? const SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
                           : const Text('SAVE'),
                     ),
                   ],
@@ -144,4 +189,4 @@ class _ClassFormDialogState extends State<ClassFormDialog> {
       ),
     );
   }
-} 
+}

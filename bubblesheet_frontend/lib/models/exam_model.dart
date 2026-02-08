@@ -21,7 +21,9 @@ class ExamModel {
     return ExamModel(
       id: (json['_id'] ?? json['id'] ?? '').toString(),
       name: json['name'] ?? '',
-      class_codes: (json['class_codes'] as List?)?.map((e) => e.toString()).toList() ?? [],
+      class_codes:
+          (json['class_codes'] as List?)?.map((e) => e.toString()).toList() ??
+          [],
       answersheet: json['answersheet'] ?? '',
       date: json['date'] ?? '',
       teacher_id: json['teacher_id'] ?? '',
@@ -37,7 +39,7 @@ class ExamModel {
       'answersheet': answersheet,
       'date': date,
       'teacher_id': teacher_id,
-      'paper': papers
+      'paper': papers,
     };
   }
 }

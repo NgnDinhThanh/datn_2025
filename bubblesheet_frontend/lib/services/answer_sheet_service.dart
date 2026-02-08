@@ -9,13 +9,11 @@ class AnswerSheetService {
   static Future<List<AnswerSheet>> getAnswerSheets(String? token) async {
     final response = await http.get(
       Uri.parse('${ApiService.baseUrl}/answer-sheets/'),
-      headers: {
-        'Authorization': 'Bearer $token',
-      },
+      headers: {'Authorization': 'Bearer $token'},
     );
-    
+
     checkAuthError(response.statusCode, response.body);
-    
+
     if (response.statusCode == 200) {
       final body = json.decode(response.body);
       final List<dynamic> data = body is Map && body.containsKey('results')
@@ -27,7 +25,10 @@ class AnswerSheetService {
     }
   }
 
-  static Future<void> createAnswerSheet(Map<String, dynamic> data, String? token) async {
+  static Future<void> createAnswerSheet(
+    Map<String, dynamic> data,
+    String? token,
+  ) async {
     final response = await http.post(
       Uri.parse('${ApiService.baseUrl}/answer-sheets/'),
       headers: {
@@ -48,7 +49,10 @@ class AnswerSheetService {
     }
   }
 
-  static Future<Uint8List> generatePreview(Map<String, dynamic> data, String? token) async {
+  static Future<Uint8List> generatePreview(
+    Map<String, dynamic> data,
+    String? token,
+  ) async {
     final response = await http.post(
       Uri.parse('${ApiService.baseUrl}/answer-sheets/generate_preview/'),
       headers: {
@@ -71,12 +75,13 @@ class AnswerSheetService {
     }
   }
 
-  static Future<Uint8List> downloadAnswerSheetPdf(String id, String? token) async {
+  static Future<Uint8List> downloadAnswerSheetPdf(
+    String id,
+    String? token,
+  ) async {
     final response = await http.get(
       Uri.parse('${ApiService.baseUrl}/answer-sheets/$id/download/pdf/'),
-      headers: {
-        'Authorization': 'Bearer $token',
-      },
+      headers: {'Authorization': 'Bearer $token'},
     );
     if (response.statusCode == 200) {
       return response.bodyBytes;
@@ -92,12 +97,13 @@ class AnswerSheetService {
     }
   }
 
-  static Future<Uint8List> downloadAnswerSheetPng(String id, String? token) async {
+  static Future<Uint8List> downloadAnswerSheetPng(
+    String id,
+    String? token,
+  ) async {
     final response = await http.get(
       Uri.parse('${ApiService.baseUrl}/answer-sheets/$id/download/png/'),
-      headers: {
-        'Authorization': 'Bearer $token',
-      },
+      headers: {'Authorization': 'Bearer $token'},
     );
     if (response.statusCode == 200) {
       return response.bodyBytes;
@@ -116,9 +122,7 @@ class AnswerSheetService {
   static Future<void> deleteAnswerSheet(String id, String? token) async {
     final response = await http.delete(
       Uri.parse('${ApiService.baseUrl}/answer-sheets/$id/'),
-      headers: {
-        'Authorization': 'Bearer $token',
-      },
+      headers: {'Authorization': 'Bearer $token'},
     );
     if (response.statusCode != 204) {
       String errorMsg = 'Failed to delete answer sheet';
@@ -132,5 +136,4 @@ class AnswerSheetService {
     }
   }
 
-  // Thêm các hàm create, delete, ... nếu cần
-} 
+}

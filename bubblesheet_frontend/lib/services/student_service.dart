@@ -249,8 +249,8 @@ class GradedPaper {
   final String? examDate;
   final double? score;
   final double? percentage;
-  final String? versionCode; // "Key" field
-  final String? scannedAt; // Timestamp
+  final String? versionCode;
+  final String? scannedAt;
 
   GradedPaper({
     required this.gradeId,

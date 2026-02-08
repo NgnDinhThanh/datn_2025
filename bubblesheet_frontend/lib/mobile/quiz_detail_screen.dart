@@ -1,3 +1,5 @@
+import 'package:bubblesheet_frontend/mobile/quiz_form_dialog.dart';
+import 'package:bubblesheet_frontend/providers/exam_provider.dart';
 import 'package:bubblesheet_frontend/services/answer_key_cache_service.dart';
 import 'package:bubblesheet_frontend/services/grade_cache_service.dart';
 import 'package:bubblesheet_frontend/services/grading_result_queue_service.dart';
@@ -31,6 +33,7 @@ class _QuizDetailScreenState extends State<QuizDetailScreen> {
   bool _hasAnswerKey = false;
   int _papersCount = 0;
   bool _isLoadingGrading = true;
+  ExamModel? _currentQuiz;
 
   void _printAnswerSheet(BuildContext context, String filePdf) async {
     if (filePdf.isEmpty) return;
@@ -47,9 +50,37 @@ class _QuizDetailScreenState extends State<QuizDetailScreen> {
   @override
   void initState() {
     super.initState();
+    _currentQuiz = widget.quiz;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _checkGradingStatus();
+      _refreshQuizFromProvider();
     });
+  }
+
+  Future<void> _refreshQuizFromProvider() async {
+    final examProvider = Provider.of<ExamProvider>(context, listen: false);
+
+    // Đảm bảo đã fetch exams
+    if (examProvider.exams.isEmpty) {
+      await examProvider.fetchExams(context);
+    }
+
+    // Tìm quiz mới từ provider
+    String quizId = widget.quiz.id;
+    if (quizId.startsWith('ObjectId(')) {
+      quizId = quizId.substring(9, quizId.length - 2);
+    }
+
+    final updatedQuiz = examProvider.exams.firstWhere(
+      (e) => e.id == quizId || e.id == widget.quiz.id,
+      orElse: () => widget.quiz,
+    );
+
+    if (mounted && updatedQuiz != _currentQuiz) {
+      setState(() {
+        _currentQuiz = updatedQuiz;
+      });
+    }
   }
 
   Future<void> _checkGradingStatus() async {
@@ -97,17 +128,13 @@ class _QuizDetailScreenState extends State<QuizDetailScreen> {
       final hasNetwork = await SyncService.hasNetworkConnection();
       if (hasNetwork) {
         try {
-          // Check answer key từ API
           final hasKeyFromApi = await GradingService.checkAnswerKey(
             quizId,
             token,
           );
-
-          // Get grades từ API
           final grades = await GradingService.getGradesForQuiz(quizId, token);
           await GradeCacheService.cacheGradesForQuiz(quizId, grades);
 
-          // Update pending count
           final pendingResults = GradingResultQueueService.getPendingResults();
           final pendingCount = pendingResults.where((item) {
             try {
@@ -130,7 +157,6 @@ class _QuizDetailScreenState extends State<QuizDetailScreen> {
           }
         } catch (e) {
           print('[QuizDetail] Error fetching latest data: $e');
-          // Không cần xử lý lỗi vì đã có cache data
         }
       }
     }
@@ -246,6 +272,7 @@ class _QuizDetailScreenState extends State<QuizDetailScreen> {
   Widget build(BuildContext context) {
     final classProvider = Provider.of<ClassProvider>(context);
     final answerSheetProvider = Provider.of<AnswerSheetProvider>(context);
+    final quiz = _currentQuiz ?? widget.quiz;
 
     // Nếu danh sách class hoặc answer sheet rỗng, tự động fetch
     if (classProvider.classes.isEmpty) {
@@ -278,14 +305,14 @@ class _QuizDetailScreenState extends State<QuizDetailScreen> {
       return id;
     }
 
-    final quizAnswerSheetId = normalizeId(widget.quiz.answersheet);
+    final quizAnswerSheetId = normalizeId(quiz.answersheet);
     final answerSheetList = answerSheetProvider.answerSheets
         .where((a) => a.id == quizAnswerSheetId)
         .toList();
     final answerSheet = answerSheetList.isNotEmpty
         ? answerSheetList.first
         : null;
-    final answerSheetName = answerSheet?.name ?? widget.quiz.answersheet;
+    final answerSheetName = answerSheet?.name ?? quiz.answersheet;
     final numQuestions = answerSheet?.numQuestions?.toString() ?? '--';
     final filePdf = answerSheet?.filePdf ?? '';
 
@@ -312,9 +339,31 @@ class _QuizDetailScreenState extends State<QuizDetailScreen> {
               letterSpacing: 2,
             ),
           ),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.edit, color: Colors.white),
+              onPressed: () async {
+                final result = await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) =>
+                        QuizFormDialog(quiz: quiz, showDelete: true),
+                  ),
+                );
+                if (mounted) {
+                  if (result == 'deleted') {
+                    Navigator.of(context).pop();
+                    return;
+                  }
+                  await _refreshQuizFromProvider();
+                  _checkGradingStatus();
+                }
+              },
+            ),
+          ],
           bottom: const TabBar(
             indicatorColor: Color(0xFF2E7D32),
-            labelColor: Color(0xFF2E7D32),
+            labelColor: Colors.white,
             unselectedLabelColor: Colors.grey,
             labelStyle: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
             tabs: [
@@ -338,7 +387,7 @@ class _QuizDetailScreenState extends State<QuizDetailScreen> {
                       style: TextStyle(fontSize: 16, color: Colors.grey),
                     ),
                     Text(
-                      widget.quiz.name,
+                      quiz.name,
                       style: const TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
@@ -368,7 +417,7 @@ class _QuizDetailScreenState extends State<QuizDetailScreen> {
                                 const SizedBox(width: 16),
                                 Expanded(
                                   child: Text(
-                                    widget.quiz.class_codes
+                                    quiz.class_codes
                                         .map(
                                           (code) =>
                                               classCodeToName[code] ?? code,
@@ -427,7 +476,7 @@ class _QuizDetailScreenState extends State<QuizDetailScreen> {
                                 ),
                                 const SizedBox(width: 16),
                                 Text(
-                                  widget.quiz.date,
+                                  quiz.date,
                                   style: const TextStyle(
                                     fontSize: 18,
                                     fontWeight: FontWeight.bold,
@@ -499,7 +548,6 @@ class _QuizDetailScreenState extends State<QuizDetailScreen> {
                                         ),
                                       ),
                                     );
-                                    // Refresh grading status sau khi quay về
                                     if (mounted) {
                                       _checkGradingStatus();
                                     }
@@ -522,7 +570,6 @@ class _QuizDetailScreenState extends State<QuizDetailScreen> {
                                         ),
                                       ),
                                     );
-                                    // ✅ Refresh grading status sau khi quay về từ ReviewPapersScreen
                                     if (mounted) {
                                       _checkGradingStatus();
                                     }
@@ -668,7 +715,6 @@ class _QuizDetailScreenState extends State<QuizDetailScreen> {
                                         ),
                                       ),
                                     ).then((_) {
-                                      // Refresh grading status after scanning
                                       _checkGradingStatus();
                                     });
                                   }
@@ -682,7 +728,6 @@ class _QuizDetailScreenState extends State<QuizDetailScreen> {
                             label: 'REVIEW PAPERS',
                             onPressed: canReview
                                 ? () async {
-                                    // ✅ Pass callback để refresh khi quay lại
                                     final result = await Navigator.push(
                                       context,
                                       MaterialPageRoute(
@@ -691,7 +736,6 @@ class _QuizDetailScreenState extends State<QuizDetailScreen> {
                                         ),
                                       ),
                                     );
-                                    // ✅ Refresh grading status sau khi quay về từ ReviewPapersScreen
                                     if (mounted) {
                                       _checkGradingStatus();
                                     }

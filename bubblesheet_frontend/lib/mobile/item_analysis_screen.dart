@@ -10,10 +10,7 @@ import '../providers/auth_provider.dart';
 class ItemAnalysisScreen extends StatefulWidget {
   final ExamModel quiz;
 
-  const ItemAnalysisScreen({
-    Key? key,
-    required this.quiz,
-  }) : super(key: key);
+  const ItemAnalysisScreen({Key? key, required this.quiz}) : super(key: key);
 
   @override
   State<ItemAnalysisScreen> createState() => _ItemAnalysisScreenState();
@@ -44,42 +41,42 @@ class _ItemAnalysisScreenState extends State<ItemAnalysisScreen> {
     try {
       final cached = ItemAnalysisCacheService.getCachedItemAnalysis(quizId);
       if (cached != null) {
-        // ✅ Hiển thị cache ngay
         setState(() {
           _analysis = cached;
           _isLoading = false;
         });
-
-        // ✅ BỎ check network - không cần thiết khi đã có cache
-        // Fetch từ API ở background (nếu có mạng) để update cache
         final token = Provider.of<AuthProvider>(context, listen: false).token;
         if (token != null) {
           // Check network ở background, không block UI
           SyncService.hasNetworkConnection().then((hasNetwork) {
             if (hasNetwork && mounted) {
               // Fetch ở background
-              GradingService.getItemAnalysis(quizId, token).then((analysis) async {
-                if (analysis != null && mounted) {
-                  await ItemAnalysisCacheService.cacheItemAnalysis(quizId, analysis);
-                  if (mounted) {
-                    setState(() {
-                      _analysis = analysis;
-                    });
-                  }
-                }
-              }).catchError((e) {
-                print('[ItemAnalysis] Error fetching fresh analysis: $e');
-              });
+              GradingService.getItemAnalysis(quizId, token)
+                  .then((analysis) async {
+                    if (analysis != null && mounted) {
+                      await ItemAnalysisCacheService.cacheItemAnalysis(
+                        quizId,
+                        analysis,
+                      );
+                      if (mounted) {
+                        setState(() {
+                          _analysis = analysis;
+                        });
+                      }
+                    }
+                  })
+                  .catchError((e) {
+                    print('[ItemAnalysis] Error fetching fresh analysis: $e');
+                  });
             }
           });
         }
-        return; // ✅ Return ngay
+        return;
       }
     } catch (e) {
       print('[ItemAnalysis] Error loading cached analysis: $e');
     }
 
-    // Chỉ fetch từ API nếu không có cache
     final token = Provider.of<AuthProvider>(context, listen: false).token;
     if (token != null) {
       final hasNetwork = await SyncService.hasNetworkConnection();
@@ -138,80 +135,79 @@ class _ItemAnalysisScreenState extends State<ItemAnalysisScreen> {
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _error != null
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.error_outline, size: 64, color: Colors.red[300]),
-                      const SizedBox(height: 16),
-                      Text(
-                        'Error loading analysis',
-                        style: TextStyle(fontSize: 18, color: Colors.grey[700]),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        _error!,
-                        style: TextStyle(fontSize: 14, color: Colors.grey[600]),
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 24),
-                      ElevatedButton.icon(
-                        onPressed: _loadAnalysis,
-                        icon: const Icon(Icons.refresh),
-                        label: const Text('Retry'),
-                      ),
-                    ],
+          ? Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.error_outline, size: 64, color: Colors.red[300]),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Error loading analysis',
+                    style: TextStyle(fontSize: 18, color: Colors.grey[700]),
                   ),
-                )
-              : _analysis == null || _analysis!.totalPapers == 0
-                  ? Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.bar_chart_outlined, size: 64, color: Colors.grey[400]),
-                          const SizedBox(height: 16),
-                          Text(
-                            'No data available',
-                            style: TextStyle(fontSize: 18, color: Colors.grey[700]),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            'Scan some papers to see analysis',
-                            style: TextStyle(fontSize: 14, color: Colors.grey[600]),
-                          ),
-                        ],
-                      ),
-                    )
-                  : SingleChildScrollView(
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // Statistics Summary
-                          _buildStatisticsCard(_analysis!.statistics),
-                          const SizedBox(height: 24),
-                          // Items List
-                          const Text(
-                            'Question Analysis',
-                            style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                          ..._analysis!.items.map((item) => _buildItemCard(item)),
-                        ],
-                      ),
-                    ),
+                  const SizedBox(height: 8),
+                  Text(
+                    _error!,
+                    style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 24),
+                  ElevatedButton.icon(
+                    onPressed: _loadAnalysis,
+                    icon: const Icon(Icons.refresh),
+                    label: const Text('Retry'),
+                  ),
+                ],
+              ),
+            )
+          : _analysis == null || _analysis!.totalPapers == 0
+          ? Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.bar_chart_outlined,
+                    size: 64,
+                    color: Colors.grey[400],
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'No data available',
+                    style: TextStyle(fontSize: 18, color: Colors.grey[700]),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Scan some papers to see analysis',
+                    style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                  ),
+                ],
+              ),
+            )
+          : SingleChildScrollView(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Statistics Summary
+                  _buildStatisticsCard(_analysis!.statistics),
+                  const SizedBox(height: 24),
+                  // Items List
+                  const Text(
+                    'Question Analysis',
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 16),
+                  ..._analysis!.items.map((item) => _buildItemCard(item)),
+                ],
+              ),
+            ),
     );
   }
 
   Widget _buildStatisticsCard(StatisticsModel stats) {
     return Card(
       elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
         padding: const EdgeInsets.all(20),
         child: Column(
@@ -229,13 +225,22 @@ class _ItemAnalysisScreenState extends State<ItemAnalysisScreen> {
             Row(
               children: [
                 Expanded(
-                  child: _buildStatItem('Min', stats.minScore.toStringAsFixed(1)),
+                  child: _buildStatItem(
+                    'Min',
+                    stats.minScore.toStringAsFixed(1),
+                  ),
                 ),
                 Expanded(
-                  child: _buildStatItem('Max', stats.maxScore.toStringAsFixed(1)),
+                  child: _buildStatItem(
+                    'Max',
+                    stats.maxScore.toStringAsFixed(1),
+                  ),
                 ),
                 Expanded(
-                  child: _buildStatItem('Avg', stats.averageScore.toStringAsFixed(1)),
+                  child: _buildStatItem(
+                    'Avg',
+                    stats.averageScore.toStringAsFixed(1),
+                  ),
                 ),
               ],
             ),
@@ -243,13 +248,22 @@ class _ItemAnalysisScreenState extends State<ItemAnalysisScreen> {
             Row(
               children: [
                 Expanded(
-                  child: _buildStatItem('Avg %', '${stats.averagePercent.toStringAsFixed(1)}%'),
+                  child: _buildStatItem(
+                    'Avg %',
+                    '${stats.averagePercent.toStringAsFixed(1)}%',
+                  ),
                 ),
                 Expanded(
-                  child: _buildStatItem('Median', stats.medianScore.toStringAsFixed(1)),
+                  child: _buildStatItem(
+                    'Median',
+                    stats.medianScore.toStringAsFixed(1),
+                  ),
                 ),
                 Expanded(
-                  child: _buildStatItem('Std Dev', stats.stdDeviation.toStringAsFixed(2)),
+                  child: _buildStatItem(
+                    'Std Dev',
+                    stats.stdDeviation.toStringAsFixed(2),
+                  ),
                 ),
               ],
             ),
@@ -271,13 +285,7 @@ class _ItemAnalysisScreenState extends State<ItemAnalysisScreen> {
           ),
         ),
         const SizedBox(height: 4),
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 12,
-            color: Colors.grey[600],
-          ),
-        ),
+        Text(label, style: TextStyle(fontSize: 12, color: Colors.grey[600])),
       ],
     );
   }
@@ -286,9 +294,7 @@ class _ItemAnalysisScreenState extends State<ItemAnalysisScreen> {
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       elevation: 1,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -300,7 +306,10 @@ class _ItemAnalysisScreenState extends State<ItemAnalysisScreen> {
                 Row(
                   children: [
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
                       decoration: BoxDecoration(
                         color: const Color(0xFF2E7D32),
                         borderRadius: BorderRadius.circular(8),
@@ -316,9 +325,7 @@ class _ItemAnalysisScreenState extends State<ItemAnalysisScreen> {
                     const SizedBox(width: 12),
                     Text(
                       'Correct: ${item.correctAnswer}',
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w500,
-                      ),
+                      style: const TextStyle(fontWeight: FontWeight.w500),
                     ),
                   ],
                 ),
@@ -363,17 +370,19 @@ class _ItemAnalysisScreenState extends State<ItemAnalysisScreen> {
     );
   }
 
-  Widget _buildProgressBar(String label, double percent, int count, Color color) {
+  Widget _buildProgressBar(
+    String label,
+    double percent,
+    int count,
+    Color color,
+  ) {
     return Row(
       children: [
         SizedBox(
           width: 80,
           child: Text(
             label,
-            style: TextStyle(
-              fontSize: 12,
-              color: Colors.grey[700],
-            ),
+            style: TextStyle(fontSize: 12, color: Colors.grey[700]),
           ),
         ),
         Expanded(
@@ -404,10 +413,7 @@ class _ItemAnalysisScreenState extends State<ItemAnalysisScreen> {
           width: 60,
           child: Text(
             '${percent.toStringAsFixed(1)}% ($count)',
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
-            ),
+            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
             textAlign: TextAlign.right,
           ),
         ),
@@ -433,13 +439,7 @@ class _ItemAnalysisScreenState extends State<ItemAnalysisScreen> {
               color: color,
             ),
           ),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 10,
-              color: Colors.grey[600],
-            ),
-          ),
+          Text(label, style: TextStyle(fontSize: 10, color: Colors.grey[600])),
         ],
       ),
     );
@@ -464,5 +464,3 @@ class _ItemAnalysisScreenState extends State<ItemAnalysisScreen> {
     }
   }
 }
-
-

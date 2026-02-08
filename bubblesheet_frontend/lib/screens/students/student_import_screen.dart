@@ -36,10 +36,7 @@ class _StudentImportScreenState extends State<StudentImportScreen> {
   String? _result;
   bool _isUploading = false;
 
-  // html.File? _pendingFile; // Web-only
-
   void _pickFile() async {
-    // Web-only file picker logic
     if (!kIsWeb) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -84,7 +81,7 @@ class _StudentImportScreenState extends State<StudentImportScreen> {
     } else if (_csvData.isNotEmpty) {
       _headers = List.generate(_csvData.first.length, (i) => 'Column ${i + 1}');
     }
-    // Reset mapping
+
     _fieldMapping = {'id': -1, 'first_name': -1, 'last_name': -1};
   }
 
@@ -93,7 +90,7 @@ class _StudentImportScreenState extends State<StudentImportScreen> {
       _isUploading = true;
       _result = null;
     });
-    // Chuẩn bị dữ liệu mapping
+
     List<Map<String, String>> students = [];
     for (var row in _csvData) {
       final idIdx = _fieldMapping['id']!;
@@ -131,7 +128,6 @@ class _StudentImportScreenState extends State<StudentImportScreen> {
   }
 
   Future<void> _handleUpload() async {
-    // Web-only upload logic
     if (!kIsWeb) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -243,7 +239,7 @@ class _StudentImportScreenState extends State<StudentImportScreen> {
               ),
               const SizedBox(height: 16),
               ElevatedButton(
-                onPressed: (){
+                onPressed: () {
                   context.go('/students');
                 },
                 child: const Text('Cancel'),

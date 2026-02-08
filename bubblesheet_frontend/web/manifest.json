@@ -1,10 +1,10 @@
 {
-    "name": "bubbleshee_frontend",
-    "short_name": "bubbleshee_frontend",
+    "name": "bubblesheet_frontend",
+    "short_name": "bubblesheet_frontend",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
-    "theme_color": "#0175C2",
+    "theme_color": "#0175C2",s
     "description": "A new Flutter project.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,

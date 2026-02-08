@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     'students',
     'answer_sheets',
     'grading',
+    'answer_keys',
 ]
 
 MIDDLEWARE = [

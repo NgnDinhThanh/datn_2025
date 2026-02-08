@@ -6,6 +6,7 @@ class User(Document):
     email = EmailField(required=True, unique=True)
     password = StringField(required=True)
     is_teacher = BooleanField(default=True)
+    is_admin = BooleanField(default=False)
 
     @property
     def is_authenticated(self):

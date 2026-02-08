@@ -21,16 +21,12 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
   String? _error;
   StudentDetailData? _studentDetailData;
 
-  // Search and filter
   final TextEditingController _searchController = TextEditingController();
   String _searchText = '';
   Timer? _debounce;
 
-  // Sorting
   String _sortField = 'scanned_at';
-  bool _sortAsc = false; // Default: newest first
-
-  // Pagination
+  bool _sortAsc = false;
   int _pageSize = 10;
   int _currentPage = 1;
   final List<int> _pageSizeOptions = [10, 25, 50, 100];
@@ -55,7 +51,7 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
     _debounce = Timer(const Duration(milliseconds: 300), () {
       setState(() {
         _searchText = _searchController.text.toLowerCase();
-        _currentPage = 1; // Reset to first page when searching
+        _currentPage = 1;
       });
     });
   }
@@ -137,7 +133,7 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
         default:
           final aTime = a.scannedAt ?? '';
           final bTime = b.scannedAt ?? '';
-          comparison = bTime.compareTo(aTime); // Newest first by default
+          comparison = bTime.compareTo(aTime);
           break;
       }
       return _sortAsc ? comparison : -comparison;
@@ -180,12 +176,11 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
   String _formatDate(String? dateStr) {
     if (dateStr == null || dateStr.isEmpty) return '-';
     try {
-      // Try parsing different date formats
       final date = DateTime.tryParse(dateStr);
       if (date != null) {
         return DateFormat('MMMM d, yyyy').format(date);
       }
-      return dateStr; // Return as-is if can't parse
+      return dateStr;
     } catch (e) {
       return dateStr;
     }
@@ -254,7 +249,6 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header: Student Name
           Padding(
             padding: const EdgeInsets.all(24),
             child: Text(
@@ -265,12 +259,10 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
             ),
           ),
 
-          // Student Information Section
           _buildStudentInfoSection(),
 
           const Divider(height: 1),
 
-          // Graded Papers Section
           _buildGradedPapersSection(),
         ],
       ),
@@ -333,7 +325,6 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Section Title and Search
           Row(
             children: [
               Text(
@@ -436,10 +427,7 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
                 _buildCell(
                   paper.examName ?? paper.examId,
                   isClickable: true,
-                  onTap: () {
-                    // Navigate to quiz detail
-                    // context.go('/quizzes/${paper.examId}');
-                  },
+                  onTap: () {},
                 ),
                 _buildCell(paper.score?.toStringAsFixed(1) ?? '-'),
                 _buildCell(

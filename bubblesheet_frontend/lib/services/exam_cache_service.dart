@@ -6,10 +6,9 @@ class ExamCacheService {
   static const String _examsKey = 'exams';
   static const String _lastSyncKey = 'last_sync';
 
-  static Future<void> cacheExams(List<Map<String, dynamic>>exams) async {
-    // ✅ Bỏ qua cache trên web
+  static Future<void> cacheExams(List<Map<String, dynamic>> exams) async {
     if (kIsWeb) return;
-    
+
     try {
       final box = await Hive.box(_boxName);
       await box.put(_examsKey, exams);
@@ -20,16 +19,15 @@ class ExamCacheService {
   }
 
   static List<Map<String, dynamic>>? getCachedExams() {
-    // ✅ Bỏ qua cache trên web
     if (kIsWeb) return null;
-    
+
     try {
       final box = Hive.box(_boxName);
       final data = box.get(_examsKey);
       if (data == null) return null;
 
       return List<Map<String, dynamic>>.from(
-          (data as List).map((item) => Map<String, dynamic>.from(item))
+        (data as List).map((item) => Map<String, dynamic>.from(item)),
       );
     } catch (e) {
       print('[ExamCache] Error getting cached exams: $e');
@@ -38,9 +36,8 @@ class ExamCacheService {
   }
 
   static DateTime? getLastSyncTime() {
-    // ✅ Bỏ qua cache trên web
     if (kIsWeb) return null;
-    
+
     try {
       final box = Hive.box(_boxName);
       final timeStr = box.get(_lastSyncKey) as String?;
@@ -52,9 +49,8 @@ class ExamCacheService {
   }
 
   static Future<void> clearCache() async {
-    // ✅ Bỏ qua cache trên web
     if (kIsWeb) return;
-    
+
     try {
       final box = Hive.box(_boxName);
       await box.clear();

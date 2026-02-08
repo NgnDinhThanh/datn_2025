@@ -266,8 +266,6 @@ class _ClassEditScreenState extends State<ClassEditScreen> {
                         child: const Text('Cancel'),
                       ),
                     ),
-
-
                   ],
                 ),
               ),

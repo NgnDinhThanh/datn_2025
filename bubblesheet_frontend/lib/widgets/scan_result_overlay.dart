@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:bubblesheet_frontend/models/scanning_result.dart';
 import 'package:bubblesheet_frontend/models/exam_model.dart';
 
-/// ZipGrade-style overlay card shown after scanning in continuous mode
 class ScanResultOverlay extends StatelessWidget {
   final ScanningResult result;
   final ExamModel quiz;
@@ -27,151 +26,170 @@ class ScanResultOverlay extends StatelessWidget {
       child: SafeArea(
         child: Stack(
           children: [
-            // Background - NO dismiss on tap (only ERASE PAPER dismisses)
-            Positioned.fill(
-              child: Container(),
-            ),
-            // Card content - full width, positioned at center
+            Positioned.fill(child: Container()),
             Center(
               child: SingleChildScrollView(
                 child: Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
+                  margin: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 16,
+                  ),
                   width: double.infinity, // Full width
                   child: Card(
                     elevation: 8,
-                    color: Colors.grey.withOpacity(0.9), // Semi-transparent grey
+                    color: Colors.grey.withOpacity(0.9),
+                    // Semi-transparent grey
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                      // Header with cropped info section (student ID, quiz ID, class ID - like ZipGrade)
-                      if (result.infoSectionBase64 != null || result.warpedImageBase64 != null || result.annotatedImageBase64 != null)
-                        ClipRRect(
-                          borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
-                          child: Container(
-                            height: 100,
-                            width: double.infinity,
-                            color: Colors.white,
-                            child: Image.memory(
-                              base64Decode(result.infoSectionBase64 ?? result.warpedImageBase64 ?? result.annotatedImageBase64!),
-                              fit: BoxFit.contain,
-                              errorBuilder: (_, __, ___) => const Icon(
-                                Icons.image,
-                                size: 48,
-                                color: Colors.grey,
+                        if (result.infoSectionBase64 != null ||
+                            result.warpedImageBase64 != null ||
+                            result.annotatedImageBase64 != null)
+                          ClipRRect(
+                            borderRadius: const BorderRadius.vertical(
+                              top: Radius.circular(12),
+                            ),
+                            child: Container(
+                              height: 100,
+                              width: double.infinity,
+                              color: Colors.white,
+                              child: Image.memory(
+                                base64Decode(
+                                  result.infoSectionBase64 ??
+                                      result.warpedImageBase64 ??
+                                      result.annotatedImageBase64!,
+                                ),
+                                fit: BoxFit.contain,
+                                errorBuilder: (_, __, ___) => const Icon(
+                                  Icons.image,
+                                  size: 48,
+                                  color: Colors.grey,
+                                ),
                               ),
                             ),
                           ),
-                        ),
-                      
-                      // Info content
-                      Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            // Quiz Name
-                            _buildInfoRow('Quiz Name', quiz.name),
-                            const SizedBox(height: 4),
-                            
-                            // Student ID
-                            _buildInfoRow('ID', result.studentId.isNotEmpty 
-                                ? result.studentId 
-                                : 'N/A'),
-                            const SizedBox(height: 12),
-                            
-                            // Score - large and prominent
-                            Center(
-                              child: RichText(
-                                text: TextSpan(
-                                  style: const TextStyle(
-                                    fontSize: 26,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.black,
+
+                        // Info content
+                        Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // Quiz Name
+                              _buildInfoRow('Quiz Name', quiz.name),
+                              const SizedBox(height: 4),
+
+                              // Student ID
+                              _buildInfoRow(
+                                'ID',
+                                result.studentId.isNotEmpty
+                                    ? result.studentId
+                                    : 'N/A',
+                              ),
+                              const SizedBox(height: 12),
+
+                              // Score - large and prominent
+                              Center(
+                                child: RichText(
+                                  text: TextSpan(
+                                    style: const TextStyle(
+                                      fontSize: 26,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.black,
+                                    ),
+                                    children: [
+                                      TextSpan(text: 'Score '),
+                                      TextSpan(
+                                        text:
+                                            '${result.score} / ${result.totalQuestions}',
+                                        style: TextStyle(
+                                          color: _getScoreColor(
+                                            result.percentage,
+                                          ),
+                                        ),
+                                      ),
+                                      TextSpan(
+                                        text:
+                                            ' = ${result.percentage.toStringAsFixed(0)} %',
+                                        style: TextStyle(
+                                          color: _getScoreColor(
+                                            result.percentage,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
                                   ),
-                                  children: [
-                                    TextSpan(text: 'Score '),
-                                    TextSpan(
-                                      text: '${result.score} / ${result.totalQuestions}',
-                                      style: TextStyle(
-                                        color: _getScoreColor(result.percentage),
-                                      ),
-                                    ),
-                                    TextSpan(
-                                      text: ' = ${result.percentage.toStringAsFixed(0)} %',
-                                      style: TextStyle(
-                                        color: _getScoreColor(result.percentage),
-                                      ),
-                                    ),
-                                  ],
                                 ),
                               ),
-                            ),
-                            const SizedBox(height: 8),
-                            
-                            // Multiple marks and blank counts
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                _buildStatChip(
-                                  'Mult. Marks',
-                                  result.multipleMarks.toString(),
-                                  result.multipleMarks > 0 ? Colors.orange : Colors.grey,
-                                ),
-                                const SizedBox(width: 24),
-                                _buildStatChip(
-                                  'Blank',
-                                  result.blankCount.toString(),
-                                  result.blankCount > 0 ? Colors.orange : Colors.grey,
-                                ),
-                              ],
-                            ),
-                            
-                          ],
+                              const SizedBox(height: 8),
+
+                              // Multiple marks and blank counts
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  _buildStatChip(
+                                    'Mult. Marks',
+                                    result.multipleMarks.toString(),
+                                    result.multipleMarks > 0
+                                        ? Colors.orange
+                                        : Colors.grey,
+                                  ),
+                                  const SizedBox(width: 24),
+                                  _buildStatChip(
+                                    'Blank',
+                                    result.blankCount.toString(),
+                                    result.blankCount > 0
+                                        ? Colors.orange
+                                        : Colors.grey,
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                      
-                      // Action buttons
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
-                        child: Row(
-                          children: [
-                            if (onChangeStudent != null) ...[
+
+                        // Action buttons
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
+                          child: Row(
+                            children: [
+                              if (onChangeStudent != null) ...[
+                                Expanded(
+                                  child: _ActionButton(
+                                    label: 'CHANGE\nSTUDENT',
+                                    onPressed: onChangeStudent!,
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                              ],
+                              // ERASE PAPER - dismisses and discards
                               Expanded(
                                 child: _ActionButton(
-                                  label: 'CHANGE\nSTUDENT',
-                                  onPressed: onChangeStudent!,
+                                  label: 'ERASE\nPAPER',
+                                  onPressed: onDismiss,
                                 ),
                               ),
                               const SizedBox(width: 8),
+                              // REVIEW PAPER - go to result screen
+                              Expanded(
+                                child: _ActionButton(
+                                  label: 'REVIEW\nPAPER',
+                                  onPressed: onReviewPaper,
+                                  isPrimary: true,
+                                ),
+                              ),
                             ],
-                            // ERASE PAPER - dismisses and discards
-                            Expanded(
-                              child: _ActionButton(
-                                label: 'ERASE\nPAPER',
-                                onPressed: onDismiss,
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            // REVIEW PAPER - go to result screen
-                            Expanded(
-                              child: _ActionButton(
-                                label: 'REVIEW\nPAPER',
-                                onPressed: onReviewPaper,
-                                isPrimary: true,
-                              ),
-                            ),
-                          ],
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ),
             ),
-          ),
           ],
         ),
       ),
@@ -186,19 +204,13 @@ class ScanResultOverlay extends StatelessWidget {
           width: 100,
           child: Text(
             label,
-            style: const TextStyle(
-              color: Colors.grey,
-              fontSize: 14,
-            ),
+            style: const TextStyle(color: Colors.grey, fontSize: 14),
           ),
         ),
         Expanded(
           child: Text(
             value,
-            style: const TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 16,
-            ),
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
           ),
         ),
       ],
@@ -208,13 +220,7 @@ class ScanResultOverlay extends StatelessWidget {
   Widget _buildStatChip(String label, String value, Color color) {
     return Column(
       children: [
-        Text(
-          label,
-          style: const TextStyle(
-            color: Colors.grey,
-            fontSize: 11,
-          ),
-        ),
+        Text(label, style: const TextStyle(color: Colors.grey, fontSize: 11)),
         const SizedBox(height: 2),
         Text(
           value,
@@ -254,19 +260,13 @@ class _ActionButton extends StatelessWidget {
         backgroundColor: isPrimary ? const Color(0xFF2E7D32) : Colors.grey[300],
         foregroundColor: isPrimary ? Colors.white : Colors.black87,
         padding: const EdgeInsets.symmetric(vertical: 12),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       ),
       child: Text(
         label,
         textAlign: TextAlign.center,
-        style: const TextStyle(
-          fontSize: 11,
-          fontWeight: FontWeight.bold,
-        ),
+        style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
       ),
     );
   }
 }
-

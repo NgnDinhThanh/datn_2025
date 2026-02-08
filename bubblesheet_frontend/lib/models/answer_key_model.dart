@@ -29,10 +29,18 @@ class AnswerKeyModel {
       idTeacher: json['id_teacher']?.toString() ?? '',
       quizId: json['quiz_id']?.toString() ?? '',
       answersheetId: json['answersheet_id']?.toString() ?? '',
-      numQuestions: json['num_questions'] is int ? json['num_questions'] : int.tryParse(json['num_questions']?.toString() ?? '') ?? 0,
-      numVersions: json['num_versions'] is int ? json['num_versions'] : int.tryParse(json['num_versions']?.toString() ?? '') ?? 0,
-      createdAt: DateTime.tryParse(json['created_at']?.toString() ?? '') ?? DateTime.now(),
-      updatedAt: DateTime.tryParse(json['updated_at']?.toString() ?? '') ?? DateTime.now(),
+      numQuestions: json['num_questions'] is int
+          ? json['num_questions']
+          : int.tryParse(json['num_questions']?.toString() ?? '') ?? 0,
+      numVersions: json['num_versions'] is int
+          ? json['num_versions']
+          : int.tryParse(json['num_versions']?.toString() ?? '') ?? 0,
+      createdAt:
+          DateTime.tryParse(json['created_at']?.toString() ?? '') ??
+          DateTime.now(),
+      updatedAt:
+          DateTime.tryParse(json['updated_at']?.toString() ?? '') ??
+          DateTime.now(),
       answerBank: json['answer_bank'] ?? [],
       versions: json['versions'] ?? [],
     );

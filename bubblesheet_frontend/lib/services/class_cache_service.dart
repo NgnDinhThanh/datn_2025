@@ -7,9 +7,8 @@ class ClassCacheService {
   static const String _lastSyncKey = 'last_sync';
 
   static Future<void> cacheClasses(List<Map<String, dynamic>> classes) async {
-    // ✅ Bỏ qua cache trên web
     if (kIsWeb) return;
-    
+
     try {
       final box = Hive.box(_boxName);
       await box.put(_classesKey, classes);
@@ -20,16 +19,15 @@ class ClassCacheService {
   }
 
   static List<Map<String, dynamic>>? getCachedClasses() {
-    // ✅ Bỏ qua cache trên web
     if (kIsWeb) return null;
-    
+
     try {
       final box = Hive.box(_boxName);
       final data = box.get(_classesKey);
       if (data == null) return null;
 
       return List<Map<String, dynamic>>.from(
-          (data as List).map((item) => Map<String, dynamic>.from(item))
+        (data as List).map((item) => Map<String, dynamic>.from(item)),
       );
     } catch (e) {
       print('[ClassCache] Error getting cached classes: $e');
@@ -38,9 +36,8 @@ class ClassCacheService {
   }
 
   static bool hasCache() {
-    // ✅ Bỏ qua cache trên web
     if (kIsWeb) return false;
-    
+
     try {
       final box = Hive.box(_boxName);
       return box.containsKey(_classesKey);
@@ -50,9 +47,8 @@ class ClassCacheService {
   }
 
   static DateTime? getLastSyncTime() {
-    // ✅ Bỏ qua cache trên web
     if (kIsWeb) return null;
-    
+
     try {
       final box = Hive.box(_boxName);
       final timeStr = box.get(_lastSyncKey) as String?;
@@ -64,9 +60,8 @@ class ClassCacheService {
   }
 
   static Future<void> clearCache() async {
-    // ✅ Bỏ qua cache trên web
     if (kIsWeb) return;
-    
+
     try {
       final box = Hive.box(_boxName);
       await box.clear();

@@ -26,8 +26,11 @@ class ClassModel {
       class_name: json['class_name'] ?? '',
       student_count: json['student_count'] ?? 0,
       teacher_id: json['teacher_id'] ?? '',
-      exam_ids: (json['exam_ids'] as List?)?.map((e) => e.toString()).toList() ?? [],
-      student_ids: (json['student_ids'] as List?)?.map((e) => e.toString()).toList() ?? [],
+      exam_ids:
+          (json['exam_ids'] as List?)?.map((e) => e.toString()).toList() ?? [],
+      student_ids:
+          (json['student_ids'] as List?)?.map((e) => e.toString()).toList() ??
+          [],
     );
   }
 

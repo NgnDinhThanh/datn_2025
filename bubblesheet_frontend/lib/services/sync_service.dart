@@ -6,20 +6,17 @@ import 'dart:convert';
 class SyncService {
   static bool _isSyncing = false;
 
-  /// Kiểm tra kết nối mạng
   static Future<bool> hasNetworkConnection() async {
     try {
-      // Dùng endpoint không cần auth để check network
       final response = await http
           .get(Uri.parse('${ApiService.baseUrl}/users/test/'))
           .timeout(const Duration(seconds: 1));
-      return response.statusCode == 200; // Chỉ 200 mới OK
+      return response.statusCode == 200;
     } catch (e) {
       return false;
     }
   }
 
-  /// Sync tất cả kết quả chờ lên server
   static Future<SyncResult> syncPendingResults(String token) async {
     if (_isSyncing) {
       print('[Sync] Already syncing, skip...');
@@ -52,7 +49,6 @@ class SyncService {
         }
       }
 
-      // Xóa các kết quả đã sync thành công
       await GradingResultQueueService.clearSyncedResults();
     } finally {
       _isSyncing = false;
@@ -64,7 +60,6 @@ class SyncService {
     return SyncResult(synced: synced, failed: failed, pending: pending);
   }
 
-  /// Upload một kết quả lên server
   static Future<bool> _uploadResult(
     Map<String, dynamic> data,
     String token,

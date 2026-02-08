@@ -25,17 +25,16 @@ class QuizDetailScreen extends StatefulWidget {
 class _QuizDetailScreenState extends State<QuizDetailScreen> {
   int? _selectedVersionIndex;
 
-  // State for grades and analysis
   List<GradeModel> _grades = [];
   ItemAnalysisModel? _itemAnalysis;
   bool _isLoadingGrades = false;
   bool _isLoadingAnalysis = false;
   String? _errorGrades;
   String? _errorAnalysis;
-  Map<String, String> _studentNameCache = {}; // studentId -> name
-  Set<String> _selectedGradeIds = {}; // For checkbox selection
+  bool _noAnalysisData = false;
+  Map<String, String> _studentNameCache = {};
+  Set<String> _selectedGradeIds = {};
 
-  // Pagination for grades table
   int _currentPage = 0;
   final int _itemsPerPage = 10;
 
@@ -99,6 +98,7 @@ class _QuizDetailScreenState extends State<QuizDetailScreen> {
     setState(() {
       _isLoadingAnalysis = true;
       _errorAnalysis = null;
+      _noAnalysisData = false;
     });
     try {
       final token = Provider.of<AuthProvider>(context, listen: false).token;
@@ -112,11 +112,22 @@ class _QuizDetailScreenState extends State<QuizDetailScreen> {
       setState(() {
         _itemAnalysis = analysis;
         _isLoadingAnalysis = false;
+        _noAnalysisData = false;
       });
     } catch (e) {
+      final msg = e.toString();
+      final isNoAnswerKey = msg.contains('Answer key not found');
+
       setState(() {
-        _errorAnalysis = e.toString();
         _isLoadingAnalysis = false;
+        if (isNoAnswerKey) {
+          _errorAnalysis = null;
+          _itemAnalysis = null;
+          _noAnalysisData = true;
+        } else {
+          _errorAnalysis = msg;
+          _noAnalysisData = false;
+        }
       });
       print('[QuizDetail] Error loading item analysis: $e');
     }
@@ -153,11 +164,9 @@ class _QuizDetailScreenState extends State<QuizDetailScreen> {
     return formatter.format(dateTime).toLowerCase();
   }
 
-  // Calculate score distribution for chart
   Map<String, int> _calculateScoreDistribution() {
     final distribution = <String, int>{};
 
-    // Create 20 bins (0-5%, 5-10%, ..., 95-100%)
     for (int i = 0; i < 20; i++) {
       final minPercent = i * 5.0;
       final maxPercent = (i + 1) * 5.0;
@@ -166,13 +175,12 @@ class _QuizDetailScreenState extends State<QuizDetailScreen> {
       distribution[label] = 0;
     }
 
-    // Count grades in each bin
     for (var grade in _grades) {
       final percent = grade.percentage ?? 0.0;
       if (percent < 0) continue;
 
       int binIndex = (percent / 5.0).floor();
-      if (binIndex >= 20) binIndex = 19; // Cap at 100%
+      if (binIndex >= 20) binIndex = 19;
 
       final minPercent = binIndex * 5.0;
       final maxPercent = (binIndex + 1) * 5.0;
@@ -184,7 +192,6 @@ class _QuizDetailScreenState extends State<QuizDetailScreen> {
     return distribution;
   }
 
-  // Get max count for chart scaling
   int _getMaxCount() {
     final distribution = _calculateScoreDistribution();
     if (distribution.isEmpty) return 1;
@@ -192,13 +199,11 @@ class _QuizDetailScreenState extends State<QuizDetailScreen> {
     return max > 0 ? max : 1;
   }
 
-  // Build score distribution chart
   Widget _buildScoreDistributionChart() {
     final distribution = _calculateScoreDistribution();
     final maxCount = _getMaxCount();
     final entries = distribution.entries.toList();
 
-    // Only show non-zero bins to make chart cleaner
     final nonZeroEntries = entries.where((e) => e.value > 0).toList();
 
     if (nonZeroEntries.isEmpty) {
@@ -251,9 +256,9 @@ class _QuizDetailScreenState extends State<QuizDetailScreen> {
                     return Padding(
                       padding: const EdgeInsets.only(top: 8),
                       child: Transform.rotate(
-                        angle: -0.5, // Rotate labels
+                        angle: -0.5,
                         child: Text(
-                          label.split('-')[0], // Show only start percentage
+                          label.split('-')[0],
                           style: const TextStyle(
                             fontSize: 10,
                             color: Colors.grey,
@@ -320,7 +325,6 @@ class _QuizDetailScreenState extends State<QuizDetailScreen> {
     );
   }
 
-  // Get paginated grades
   List<GradeModel> _getPaginatedGrades() {
     final startIndex = _currentPage * _itemsPerPage;
     final endIndex = (startIndex + _itemsPerPage).clamp(0, _grades.length);
@@ -350,7 +354,6 @@ class _QuizDetailScreenState extends State<QuizDetailScreen> {
       return const Center(child: Text('Quiz not found'));
     }
 
-    // Lấy tên lớp và answer sheet
     final classNames = quiz.class_codes
         .map((code) {
           final classObj = classProvider.classes.where(
@@ -382,7 +385,6 @@ class _QuizDetailScreenState extends State<QuizDetailScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header lớn giống ZipGrade
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -435,11 +437,9 @@ class _QuizDetailScreenState extends State<QuizDetailScreen> {
             ],
           ),
           const SizedBox(height: 24),
-          // Row các block chính
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Block Quiz Details (thu nhỏ)
               Flexible(
                 flex: 2,
                 child: Card(
@@ -1102,6 +1102,14 @@ class _QuizDetailScreenState extends State<QuizDetailScreen> {
                         ],
                       ),
                     )
+                  else if (_noAnalysisData)
+                    const Padding(
+                      padding: EdgeInsets.all(20),
+                      child: Text(
+                        'No statistics available (no answer key yet).',
+                        style: TextStyle(color: Colors.grey),
+                      ),
+                    )
                   else ...[
                     Table(
                       columnWidths: const {
@@ -1298,14 +1306,6 @@ class _QuizDetailScreenState extends State<QuizDetailScreen> {
                           color: Colors.teal,
                         ),
                       ),
-                      if (_itemAnalysis != null && _grades.isNotEmpty)
-                        Text(
-                          ' - Primary Key ${_grades.first.versionCode ?? 'N/A'} - ${_itemAnalysis!.totalPapers} papers',
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: Colors.grey[600],
-                          ),
-                        ),
                     ],
                   ),
                   const SizedBox(height: 12),
@@ -1331,6 +1331,14 @@ class _QuizDetailScreenState extends State<QuizDetailScreen> {
                             child: const Text('Retry'),
                           ),
                         ],
+                      ),
+                    )
+                  else if (_noAnalysisData)
+                    const Padding(
+                      padding: EdgeInsets.all(20),
+                      child: Text(
+                        'No item analysis available (no answer key yet).',
+                        style: TextStyle(color: Colors.grey),
                       ),
                     )
                   else if (_itemAnalysis == null ||
@@ -1360,14 +1368,9 @@ class _QuizDetailScreenState extends State<QuizDetailScreen> {
                                 label: Text('% Correct'),
                                 numeric: true,
                               ),
-                              DataColumn(
-                                label: Text('Discrim. Factor'),
-                                numeric: true,
-                              ),
                               DataColumn(label: Text('Responses')),
                             ],
                             rows: _itemAnalysis!.items.map((item) {
-                              // Calculate response distribution (simplified - show correct/incorrect/blank)
                               final total =
                                   item.correctCount +
                                   item.incorrectCount +
@@ -1388,8 +1391,6 @@ class _QuizDetailScreenState extends State<QuizDetailScreen> {
                                       '${item.correctPercent.toStringAsFixed(1)}%',
                                     ),
                                   ),
-                                  DataCell(Text('N/A')),
-                                  // Discrimination factor not calculated yet
                                   DataCell(
                                     Tooltip(
                                       message: responses,

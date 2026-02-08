@@ -14,7 +14,9 @@ class AnswerSheetProvider extends ChangeNotifier {
   String? _error;
 
   List<AnswerSheet> get answerSheets => _answerSheets;
+
   bool get isLoading => _isLoading;
+
   String? get error => _error;
 
   Future<void> fetchAnswerSheets(BuildContext context) async {
@@ -24,8 +26,9 @@ class AnswerSheetProvider extends ChangeNotifier {
     try {
       final cached = AnswerSheetCacheService.getCachedAnswerSheets();
       if (cached != null && cached.isNotEmpty) {
-        _answerSheets = cached.map((json) => AnswerSheet.fromJson(json)).toList();
-        // ✅ Merge với pending CRUD operations
+        _answerSheets = cached
+            .map((json) => AnswerSheet.fromJson(json))
+            .toList();
         _mergePendingCrudOperations();
         _isLoading = false;
         notifyListeners();
@@ -39,9 +42,10 @@ class AnswerSheetProvider extends ChangeNotifier {
       if (hasNetwork) {
         try {
           final newSheets = await AnswerSheetService.getAnswerSheets(token);
-          await AnswerSheetCacheService.cacheAnswerSheets(newSheets.map((a) => a.toJson()).toList());
+          await AnswerSheetCacheService.cacheAnswerSheets(
+            newSheets.map((a) => a.toJson()).toList(),
+          );
           _answerSheets = newSheets;
-          // ✅ Merge với pending CRUD operations sau khi fetch từ API
           _mergePendingCrudOperations();
           _error = null;
           notifyListeners();
@@ -68,7 +72,6 @@ class AnswerSheetProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Merge pending CRUD operations vào danh sách answer sheets hiện tại
   void _mergePendingCrudOperations() {
     try {
       final pendingOps = CrudOperationsQueueService.getPendingOperations()
@@ -81,22 +84,26 @@ class AnswerSheetProvider extends ChangeNotifier {
         final data = Map<String, dynamic>.from(op['data'] as Map);
 
         if (type == 'CREATE') {
-          // Thêm answer sheet mới (nếu chưa có)
           final name = data['name'] as String? ?? '';
-          if (name.isNotEmpty && !_answerSheets.any((a) => a.name == name && a.id.startsWith('temp_'))) {
-            _answerSheets.add(AnswerSheet(
-              id: 'temp_${DateTime.now().millisecondsSinceEpoch}',
-              name: name,
-              createdAt: DateTime.now(),
-              numQuestions: data['num_questions'] ?? 0,
-              numOptions: data['num_options'] ?? 4,
-              studentIdDigits: data['student_id_digits'] ?? 0,
-              examIdDigits: data['exam_id_digits'] ?? 0,
-              classIdDigits: data['class_id_digits'] ?? 0,
-              filePdf: '',
-              fileJson: '',
-              filePreview: '',
-            ));
+          if (name.isNotEmpty &&
+              !_answerSheets.any(
+                (a) => a.name == name && a.id.startsWith('temp_'),
+              )) {
+            _answerSheets.add(
+              AnswerSheet(
+                id: 'temp_${DateTime.now().millisecondsSinceEpoch}',
+                name: name,
+                createdAt: DateTime.now(),
+                numQuestions: data['num_questions'] ?? 0,
+                numOptions: data['num_options'] ?? 4,
+                studentIdDigits: data['student_id_digits'] ?? 0,
+                examIdDigits: data['exam_id_digits'] ?? 0,
+                classIdDigits: data['class_id_digits'] ?? 0,
+                filePdf: '',
+                fileJson: '',
+                filePreview: '',
+              ),
+            );
           }
         } else if (type == 'DELETE' && entityId != null) {
           // Xóa answer sheet
@@ -104,7 +111,9 @@ class AnswerSheetProvider extends ChangeNotifier {
           if (entityId.startsWith('ObjectId(')) {
             normalizedId = entityId.substring(9, entityId.length - 2);
           }
-          _answerSheets.removeWhere((a) => a.id == entityId || a.id == normalizedId);
+          _answerSheets.removeWhere(
+            (a) => a.id == entityId || a.id == normalizedId,
+          );
         }
       }
     } catch (e) {
@@ -112,7 +121,10 @@ class AnswerSheetProvider extends ChangeNotifier {
     }
   }
 
-  Future<void> createAnswerSheet(BuildContext context, Map<String, dynamic> data) async {
+  Future<void> createAnswerSheet(
+    BuildContext context,
+    Map<String, dynamic> data,
+  ) async {
     _isLoading = true;
     _error = null;
     notifyListeners();
@@ -125,24 +137,46 @@ class AnswerSheetProvider extends ChangeNotifier {
       return;
     }
 
-    // ✅ Check network
     final hasNetwork = await SyncService.hasNetworkConnection();
 
     if (hasNetwork) {
-      // ✅ Online: Gọi API ngay
       try {
         await AnswerSheetService.createAnswerSheet(data, token);
         await fetchAnswerSheets(context);
       } catch (e) {
-        // Nếu API fail, queue lại
         await CrudOperationsQueueService.addOperation(
           type: 'CREATE',
           entity: 'AnswerSheet',
           entityId: null,
           data: data,
         );
-        // Optimistic UI: Add vào local list
-        _answerSheets.add(AnswerSheet(
+        _answerSheets.add(
+          AnswerSheet(
+            id: 'temp_${DateTime.now().millisecondsSinceEpoch}',
+            name: data['name'] ?? '',
+            createdAt: DateTime.now(),
+            numQuestions: data['num_questions'] ?? 0,
+            numOptions: data['num_options'] ?? 4,
+            studentIdDigits: data['student_id_digits'] ?? 0,
+            examIdDigits: data['exam_id_digits'] ?? 0,
+            classIdDigits: data['class_id_digits'] ?? 0,
+            filePdf: '',
+            fileJson: '',
+            filePreview: '',
+          ),
+        );
+        _error = null;
+        notifyListeners();
+      }
+    } else {
+      await CrudOperationsQueueService.addOperation(
+        type: 'CREATE',
+        entity: 'AnswerSheet',
+        entityId: null,
+        data: data,
+      );
+      _answerSheets.add(
+        AnswerSheet(
           id: 'temp_${DateTime.now().millisecondsSinceEpoch}',
           name: data['name'] ?? '',
           createdAt: DateTime.now(),
@@ -154,32 +188,8 @@ class AnswerSheetProvider extends ChangeNotifier {
           filePdf: '',
           fileJson: '',
           filePreview: '',
-        ));
-        _error = null;
-        notifyListeners();
-      }
-    } else {
-      // ✅ Offline: Queue operation
-      await CrudOperationsQueueService.addOperation(
-        type: 'CREATE',
-        entity: 'AnswerSheet',
-        entityId: null,
-        data: data,
+        ),
       );
-      // Optimistic UI: Add vào local list
-      _answerSheets.add(AnswerSheet(
-        id: 'temp_${DateTime.now().millisecondsSinceEpoch}',
-        name: data['name'] ?? '',
-        createdAt: DateTime.now(),
-        numQuestions: data['num_questions'] ?? 0,
-        numOptions: data['num_options'] ?? 4,
-        studentIdDigits: data['student_id_digits'] ?? 0,
-        examIdDigits: data['exam_id_digits'] ?? 0,
-        classIdDigits: data['class_id_digits'] ?? 0,
-        filePdf: '',
-        fileJson: '',
-        filePreview: '',
-      ));
       _error = null;
       notifyListeners();
     }
@@ -201,17 +211,14 @@ class AnswerSheetProvider extends ChangeNotifier {
       return;
     }
 
-    // Normalize id (remove ObjectId wrapper if present)
     String normalizedId = id;
     if (id.startsWith('ObjectId(')) {
       normalizedId = id.substring(9, id.length - 2);
     }
 
-    // ✅ Check network
     final hasNetwork = await SyncService.hasNetworkConnection();
 
     if (hasNetwork) {
-      // ✅ Online: Gọi API ngay
       try {
         await AnswerSheetService.deleteAnswerSheet(normalizedId, token);
         await fetchAnswerSheets(context);
@@ -223,20 +230,17 @@ class AnswerSheetProvider extends ChangeNotifier {
           entityId: id,
           data: {},
         );
-        // Optimistic UI: Remove từ local list
         _answerSheets.removeWhere((a) => a.id == id || a.id == normalizedId);
         _error = null;
         notifyListeners();
       }
     } else {
-      // ✅ Offline: Queue operation
       await CrudOperationsQueueService.addOperation(
         type: 'DELETE',
         entity: 'AnswerSheet',
         entityId: id,
         data: {},
       );
-      // Optimistic UI: Remove từ local list
       _answerSheets.removeWhere((a) => a.id == id || a.id == normalizedId);
       _error = null;
       notifyListeners();
@@ -245,6 +249,4 @@ class AnswerSheetProvider extends ChangeNotifier {
     _isLoading = false;
     notifyListeners();
   }
-
-// Thêm các hàm create, delete, ... nếu cần
 }

@@ -23,7 +23,7 @@ class _QuizzesScreenState extends State<QuizzesScreen> {
   String _search = '';
   String _sortKey = 'Date';
   final List<String> _sortOptions = ['Date', 'Name'];
-  Map<String, int> _papersCountCache = {}; // Cache papers count for each quiz
+  Map<String, int> _papersCountCache = {};
 
   @override
   void initState() {
@@ -53,10 +53,8 @@ class _QuizzesScreenState extends State<QuizzesScreen> {
           quizId = quizId.substring(9, quizId.length - 2);
         }
 
-        // Load từ cache
         final cachedCount = GradeCacheService.getCacheGradesCount(quizId);
 
-        // Đếm pending results cho quiz này
         final pendingResults = GradingResultQueueService.getPendingResults();
         final pendingCount = pendingResults.where((item) {
           try {
@@ -112,7 +110,6 @@ class _QuizzesScreenState extends State<QuizzesScreen> {
 
           newCache[exam.id] = grades.length + pendingCount;
         } catch (e) {
-          // Giữ nguyên giá trị từ cache nếu API fail
           print('[QuizzScreen] Error loading papers count for ${exam.id}: $e');
         }
       }
@@ -182,7 +179,7 @@ class _QuizzesScreenState extends State<QuizzesScreen> {
             ),
             decoration: const BoxDecoration(
               color: Color(0xFF2E7D32), // ZipGrade green
-              borderRadius: BorderRadius.vertical(bottom: Radius.circular(20)),
+              borderRadius: BorderRadius.vertical(bottom: Radius.circular(0)),
               boxShadow: [
                 BoxShadow(
                   color: Colors.black26,
@@ -195,7 +192,7 @@ class _QuizzesScreenState extends State<QuizzesScreen> {
               child: Padding(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 16,
-                  vertical: 12,
+                  vertical: 10,
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -230,7 +227,7 @@ class _QuizzesScreenState extends State<QuizzesScreen> {
                           ),
                           decoration: BoxDecoration(
                             color: Colors.white,
-                            borderRadius: BorderRadius.circular(8),
+                            // borderRadius: BorderRadius.circular(8),
                             border: Border.all(color: const Color(0xFF2E7D32)),
                           ),
                           child: DropdownButtonHideUnderline(
@@ -262,7 +259,7 @@ class _QuizzesScreenState extends State<QuizzesScreen> {
                             ),
                             decoration: BoxDecoration(
                               color: Colors.white,
-                              borderRadius: BorderRadius.circular(8),
+                              // borderRadius: BorderRadius.circular(8),
                               border: Border.all(
                                 color: const Color(0xFF2E7D32),
                               ),

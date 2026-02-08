@@ -33,21 +33,30 @@ class _ClassesScreenState extends State<ClassesScreen> {
         children: [
           // Custom Header
           Container(
-            padding: const EdgeInsets.only(top: 16, bottom: 16, left: 16, right: 16),
+            padding: const EdgeInsets.only(
+              top: 16,
+              bottom: 16,
+              left: 16,
+              right: 16,
+            ),
             decoration: const BoxDecoration(
-              color: Color(0xFF2E7D32), // ZipGrade green
-              borderRadius: BorderRadius.vertical(bottom: Radius.circular(20)),
+              color: Color(0xFF2E7D32),
+              // ZipGrade green
+              // borderRadius: BorderRadius.vertical(bottom: Radius.circular(20)),
               boxShadow: [
                 BoxShadow(
                   color: Colors.black26,
-                  blurRadius: 8,
+                  blurRadius: 0,
                   offset: Offset(0, 4),
                 ),
               ],
             ),
             child: SafeArea(
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
@@ -72,10 +81,13 @@ class _ClassesScreenState extends State<ClassesScreen> {
                     const SizedBox(height: 16),
                     // Search Field
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.white,
-                        borderRadius: BorderRadius.circular(8),
+                        // borderRadius: BorderRadius.circular(8),
                         border: Border.all(color: const Color(0xFF2E7D32)),
                       ),
                       child: TextField(
@@ -83,7 +95,10 @@ class _ClassesScreenState extends State<ClassesScreen> {
                           hintText: 'Search',
                           border: InputBorder.none,
                           contentPadding: EdgeInsets.zero,
-                          prefixIcon: Icon(Icons.search, color: Color(0xFF2E7D32)),
+                          prefixIcon: Icon(
+                            Icons.search,
+                            color: Color(0xFF2E7D32),
+                          ),
                         ),
                         onChanged: (v) => setState(() => _search = v),
                       ),
@@ -116,22 +131,36 @@ class _ClassesScreenState extends State<ClassesScreen> {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const Icon(Icons.error_outline, color: Colors.red, size: 48),
+                          const Icon(
+                            Icons.error_outline,
+                            color: Colors.red,
+                            size: 48,
+                          ),
                           const SizedBox(height: 16),
                           const Text(
                             'Connection Error',
-                            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.red),
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.red,
+                            ),
                           ),
                           const SizedBox(height: 8),
                           Text(
                             provider.error!,
-                            style: const TextStyle(color: Colors.red, fontSize: 12),
+                            style: const TextStyle(
+                              color: Colors.red,
+                              fontSize: 12,
+                            ),
                             textAlign: TextAlign.center,
                           ),
                           const SizedBox(height: 24),
                           ElevatedButton.icon(
                             onPressed: () {
-                              Provider.of<ClassProvider>(context, listen: false).fetchClasses(context);
+                              Provider.of<ClassProvider>(
+                                context,
+                                listen: false,
+                              ).fetchClasses(context);
                             },
                             icon: const Icon(Icons.refresh),
                             label: const Text('Retry'),
@@ -142,8 +171,15 @@ class _ClassesScreenState extends State<ClassesScreen> {
                   );
                 }
                 List<ClassModel> filtered = provider.classes
-                    .where((c) => c.class_name.toLowerCase().contains(_search.toLowerCase()) ||
-                                 c.class_code.toLowerCase().contains(_search.toLowerCase()))
+                    .where(
+                      (c) =>
+                          c.class_name.toLowerCase().contains(
+                            _search.toLowerCase(),
+                          ) ||
+                          c.class_code.toLowerCase().contains(
+                            _search.toLowerCase(),
+                          ),
+                    )
                     .toList();
                 if (filtered.isEmpty) {
                   return const Center(child: Text('No classes found.'));
@@ -195,7 +231,10 @@ class _ClassesScreenState extends State<ClassesScreen> {
                             ),
                           );
                           if (updated == true && context.mounted) {
-                            Provider.of<ClassProvider>(context, listen: false).fetchClasses(context);
+                            Provider.of<ClassProvider>(
+                              context,
+                              listen: false,
+                            ).fetchClasses(context);
                           }
                         },
                       ),
@@ -209,21 +248,15 @@ class _ClassesScreenState extends State<ClassesScreen> {
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () {
-          showDialog(
-            context: context,
-            builder: (_) => const ClassFormDialog(),
-          );
+          showDialog(context: context, builder: (_) => const ClassFormDialog());
         },
         backgroundColor: const Color(0xFF2E7D32),
         icon: const Icon(Icons.add, color: Colors.white),
         label: const Text(
           'NEW CLASS',
-          style: TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-          ),
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
       ),
     );
   }
-} 
+}

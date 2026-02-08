@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 
 class AnswerSheetFormProvider extends ChangeNotifier {
-  // Step 1: Name
   String name = '';
 
-  // Step 2: Headers (tối đa 6)
   List<HeaderField> headers = [
     HeaderField(enabled: true, label: 'Name', width: 'Large'),
     HeaderField(enabled: true, label: 'Quiz', width: 'Medium'),
@@ -14,7 +12,6 @@ class AnswerSheetFormProvider extends ChangeNotifier {
     HeaderField(enabled: false, label: '', width: 'Medium'),
   ];
 
-  // Step 3: ID counts & labels
   int studentIdDigits = 5;
   String studentIdLabel = 'Student ID';
   int classIdDigits = 5;
@@ -22,12 +19,9 @@ class AnswerSheetFormProvider extends ChangeNotifier {
   int examIdDigits = 5;
   String examIdLabel = 'Quiz ID';
 
-  // Step 4: Questions
   int numQuestions = 25;
   int numOptions = 5;
   List<QuestionField> questions = [];
-
-  // Step 5: Preview (có thể thêm các trường preview nếu cần)
 
   void setName(String value) {
     name = value;
@@ -43,22 +37,27 @@ class AnswerSheetFormProvider extends ChangeNotifier {
     studentIdDigits = value;
     notifyListeners();
   }
+
   void setStudentIdLabel(String value) {
     studentIdLabel = value;
     notifyListeners();
   }
+
   void setClassIdDigits(int value) {
     classIdDigits = value;
     notifyListeners();
   }
+
   void setClassIdLabel(String value) {
     classIdLabel = value;
     notifyListeners();
   }
+
   void setExamIdDigits(int value) {
     examIdDigits = value;
     notifyListeners();
   }
+
   void setExamIdLabel(String value) {
     examIdLabel = value;
     notifyListeners();
@@ -68,10 +67,12 @@ class AnswerSheetFormProvider extends ChangeNotifier {
     numQuestions = value;
     notifyListeners();
   }
+
   void setNumOptions(int value) {
     numOptions = value;
     notifyListeners();
   }
+
   void setQuestions(List<QuestionField> value) {
     questions = value;
     notifyListeners();
@@ -104,14 +105,22 @@ class HeaderField {
   bool enabled;
   String label;
   String width; // Large, Medium, Small
-  HeaderField({required this.enabled, required this.label, required this.width});
+  HeaderField({
+    required this.enabled,
+    required this.label,
+    required this.width,
+  });
 }
 
 class QuestionField {
   int number;
   String type; // Internal Label, ...
   String labels; // ABCDE
-  QuestionField({required this.number, required this.type, required this.labels});
+  QuestionField({
+    required this.number,
+    required this.type,
+    required this.labels,
+  });
 }
 
 extension AnswerSheetFormProviderApi on AnswerSheetFormProvider {
@@ -127,4 +136,4 @@ extension AnswerSheetFormProviderApi on AnswerSheetFormProvider {
       "class_id_digits": classIdDigits,
     };
   }
-} 
+}

@@ -6,11 +6,9 @@ class StudentCacheService {
   static const String _studentsKey = 'students';
   static const String _lastSyncKey = 'last_sync';
 
-  /// Lưu danh sách students vào cache
   static Future<void> cacheStudents(List<Map<String, dynamic>> students) async {
-    // ✅ Bỏ qua cache trên web
     if (kIsWeb) return;
-    
+
     try {
       final box = await Hive.box(_boxName);
       await box.put(_studentsKey, students);
@@ -20,18 +18,16 @@ class StudentCacheService {
     }
   }
 
-  /// Lấy danh sách students từ cache
   static List<Map<String, dynamic>>? getCachedStudents() {
-    // ✅ Bỏ qua cache trên web
     if (kIsWeb) return null;
-    
+
     try {
       final box = Hive.box(_boxName);
       final data = box.get(_studentsKey);
       if (data == null) return null;
 
       return List<Map<String, dynamic>>.from(
-          (data as List).map((item) => Map<String, dynamic>.from(item))
+        (data as List).map((item) => Map<String, dynamic>.from(item)),
       );
     } catch (e) {
       print('[StudentCache] Error getting cached students: $e');
@@ -39,11 +35,9 @@ class StudentCacheService {
     }
   }
 
-  /// Kiểm tra có cache không
   static bool hasCache() {
-    // ✅ Bỏ qua cache trên web
     if (kIsWeb) return false;
-    
+
     try {
       final box = Hive.box(_boxName);
       return box.containsKey(_studentsKey);
@@ -52,11 +46,9 @@ class StudentCacheService {
     }
   }
 
-  /// Lấy thời gian sync cuối cùng
   static DateTime? getLastSyncTime() {
-    // ✅ Bỏ qua cache trên web
     if (kIsWeb) return null;
-    
+
     try {
       final box = Hive.box(_boxName);
       final timeStr = box.get(_lastSyncKey) as String?;
@@ -67,11 +59,9 @@ class StudentCacheService {
     }
   }
 
-  /// Xóa cache
   static Future<void> clearCache() async {
-    // ✅ Bỏ qua cache trên web
     if (kIsWeb) return;
-    
+
     try {
       final box = Hive.box(_boxName);
       await box.clear();

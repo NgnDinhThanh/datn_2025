@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../providers/auth_provider.dart';
 import 'quizz_screen.dart';
 import 'classes_screen.dart';
 import 'students_screen.dart';
+import 'admin_screen.dart';
 import 'my_account_screen.dart';
 
 class MainScreen extends StatefulWidget {
@@ -12,26 +15,42 @@ class MainScreen extends StatefulWidget {
 }
 
 class _MainScreenState extends State<MainScreen> {
-  int _selectedIndex = 0; // Quizzes mặc định
-  final List<Widget> _screens = const [
-    QuizzesScreen(),
-    ClassesScreen(),
-    StudentsScreen(),
-    MyAccountScreen(),
+  int _selectedIndex = 0;
+
+  List<Widget> _buildScreens(bool isAdmin) => [
+    const QuizzesScreen(),
+    const ClassesScreen(),
+    const StudentsScreen(),
+    if (isAdmin) const AdminScreen(),
+    const MyAccountScreen(),
   ];
 
-  final List<String> _tabTitles = ['Quizzes', 'Classes', 'Students', 'My Account'];
-  final List<IconData> _tabIcons = [
+  List<String> _tabTitles(bool isAdmin) => [
+    'Quizzes',
+    'Classes',
+    'Students',
+    if (isAdmin) 'Admin',
+    'My Account',
+  ];
+
+  List<IconData> _tabIcons(bool isAdmin) => [
     Icons.check_box,
     Icons.group,
     Icons.person,
+    if (isAdmin) Icons.admin_panel_settings,
     Icons.account_circle,
   ];
 
   @override
   Widget build(BuildContext context) {
+    final isAdmin = context.watch<AuthProvider>().isAdmin;
+    final screens = _buildScreens(isAdmin);
+    final tabTitles = _tabTitles(isAdmin);
+    final tabIcons = _tabIcons(isAdmin);
+    if (_selectedIndex >= screens.length) _selectedIndex = 0;
+
     return Scaffold(
-      body: _screens[_selectedIndex],
+      body: IndexedStack(index: _selectedIndex, children: screens),
       bottomNavigationBar: Container(
         height: 80,
         decoration: const BoxDecoration(
@@ -47,8 +66,8 @@ class _MainScreenState extends State<MainScreen> {
         child: SafeArea(
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: List.generate(_tabTitles.length, (index) {
-              return _buildNavItem(index);
+            children: List.generate(tabTitles.length, (index) {
+              return _buildNavItem(index, tabTitles, tabIcons);
             }),
           ),
         ),
@@ -56,10 +75,14 @@ class _MainScreenState extends State<MainScreen> {
     );
   }
 
-  Widget _buildNavItem(int index) {
+  Widget _buildNavItem(
+    int index,
+    List<String> tabTitles,
+    List<IconData> tabIcons,
+  ) {
     final isSelected = _selectedIndex == index;
     final color = isSelected ? const Color(0xFF2E7D32) : Colors.grey;
-    
+
     return GestureDetector(
       onTap: () {
         setState(() {
@@ -71,14 +94,10 @@ class _MainScreenState extends State<MainScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              _tabIcons[index],
-              color: color,
-              size: 24,
-            ),
+            Icon(tabIcons[index], color: color, size: 24),
             const SizedBox(height: 4),
             Text(
-              _tabTitles[index],
+              tabTitles[index],
               style: TextStyle(
                 color: color,
                 fontSize: 12,
@@ -90,4 +109,4 @@ class _MainScreenState extends State<MainScreen> {
       ),
     );
   }
-} 
+}

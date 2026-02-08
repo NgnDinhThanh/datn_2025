@@ -316,9 +316,11 @@ class _StudentFormScreenState extends State<StudentFormScreen> {
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  onPressed: _isLoading ? null : (){
-                    context.go('/students');
-                  },
+                  onPressed: _isLoading
+                      ? null
+                      : () {
+                          context.go('/students');
+                        },
                   child: const Text('Cancel'),
                 ),
               ),

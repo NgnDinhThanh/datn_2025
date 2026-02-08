@@ -8,7 +8,9 @@ class AnswerKeyProvider extends ChangeNotifier {
   String? _error;
 
   List<AnswerKeyModel> get answerKeys => _answerKeys;
+
   bool get isLoading => _isLoading;
+
   String? get error => _error;
 
   Future<void> fetchAnswerKeys(BuildContext context, String quizId) async {
@@ -16,7 +18,10 @@ class AnswerKeyProvider extends ChangeNotifier {
     _error = null;
     notifyListeners();
     try {
-      _answerKeys = await AnswerKeyService.getAnswerKeys(context: context, quizId: quizId);
+      _answerKeys = await AnswerKeyService.getAnswerKeys(
+        context: context,
+        quizId: quizId,
+      );
     } catch (e) {
       _error = e.toString();
     }
@@ -30,4 +35,4 @@ class AnswerKeyProvider extends ChangeNotifier {
     _isLoading = false;
     notifyListeners();
   }
-} 
+}

@@ -8,14 +8,15 @@ import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
 
 class ScanningService {
-  // Luôn lấy baseUrl mới nhất từ ApiService (có thể thay đổi khi switch IP)
   static String get baseUrl => ApiService.baseUrl;
 
-  /// Preview check - Check if ArUco markers are detected
-  static Future<PreviewCheckResult> previewCheck(File imageFile, String token) async {
+  static Future<PreviewCheckResult> previewCheck(
+    File imageFile,
+    String token,
+  ) async {
     try {
       final url = Uri.parse('$baseUrl/grading/preview-check/');
-      
+
       var request = http.MultipartRequest('POST', url);
       request.headers['Authorization'] = 'Bearer $token';
       request.files.add(
@@ -38,7 +39,10 @@ class ScanningService {
   }
 
   // Get answer key for a quiz (cache and offline grade)
-  static Future<Map<String, dynamic>?> getAnswerKey({required String quizId, required String token}) async {
+  static Future<Map<String, dynamic>?> getAnswerKey({
+    required String quizId,
+    required String token,
+  }) async {
     try {
       final uri = Uri.parse('$baseUrl/answer-keys/quiz/$quizId/');
 
@@ -71,12 +75,12 @@ class ScanningService {
   }) async {
     try {
       final url = Uri.parse('$baseUrl/grading/scan/');
-      
+
       // Tối ưu: Resize ảnh trước khi gửi để giảm upload time
       // Full resolution có thể rất lớn (5-10MB), resize xuống 2000x3000 vẫn đủ để chấm
       final imageBytes = await imageFile.readAsBytes();
       final originalImage = img.decodeImage(imageBytes);
-      
+
       File? optimizedFile;
       if (originalImage != null) {
         // Resize nếu ảnh quá lớn (giữ tỷ lệ)
@@ -89,7 +93,7 @@ class ScanningService {
           }
           final newWidth = (originalImage.width * scale).round();
           final newHeight = (originalImage.height * scale).round();
-          
+
           resizedImage = img.copyResize(
             originalImage,
             width: newWidth,
@@ -99,30 +103,35 @@ class ScanningService {
         } else {
           resizedImage = originalImage;
         }
-        
+
         // Compress với quality 90% (đủ để chấm chính xác)
         final compressedBytes = img.encodeJpg(resizedImage, quality: 90);
-        
+
         // Tạo file tạm cho ảnh đã optimize
         final tempDir = Directory.systemTemp;
-        optimizedFile = File(path.join(tempDir.path, 'scan_${DateTime.now().millisecondsSinceEpoch}.jpg'));
+        optimizedFile = File(
+          path.join(
+            tempDir.path,
+            'scan_${DateTime.now().millisecondsSinceEpoch}.jpg',
+          ),
+        );
         await optimizedFile.writeAsBytes(compressedBytes);
       }
-      
+
       var request = http.MultipartRequest('POST', url);
       request.headers['Authorization'] = 'Bearer $token';
       request.fields['quiz_id'] = quizId;
       request.fields['answersheet_id'] = answersheetId;
       request.files.add(
         await http.MultipartFile.fromPath(
-          'image', 
+          'image',
           optimizedFile?.path ?? imageFile.path,
         ),
       );
 
       final streamedResponse = await request.send();
       final response = await http.Response.fromStream(streamedResponse);
-      
+
       // Xóa file tạm sau khi gửi
       if (optimizedFile != null) {
         try {
@@ -158,7 +167,7 @@ class ScanningService {
   }) async {
     try {
       final url = Uri.parse('$baseUrl/grading/save-grade/');
-      
+
       var request = http.MultipartRequest('POST', url);
       request.headers['Authorization'] = 'Bearer $token';
       request.fields['quiz_id'] = quizId;
@@ -168,20 +177,23 @@ class ScanningService {
       request.fields['answers'] = jsonEncode(answers);
       request.fields['version_code'] = versionCode;
       request.fields['answersheet_id'] = answersheetId;
-      
+
       if (classId != null) {
         request.fields['class_id'] = classId;
       }
-      
+
       if (scannedImage != null) {
         request.files.add(
           await http.MultipartFile.fromPath('scanned_image', scannedImage.path),
         );
       }
-      
+
       if (annotatedImage != null) {
         request.files.add(
-          await http.MultipartFile.fromPath('annotated_image', annotatedImage.path),
+          await http.MultipartFile.fromPath(
+            'annotated_image',
+            annotatedImage.path,
+          ),
         );
       }
 
@@ -211,9 +223,7 @@ class ScanningService {
 
       final response = await http.get(
         uri,
-        headers: {
-          'Authorization': 'Bearer $token',
-        },
+        headers: {'Authorization': 'Bearer $token'},
       );
 
       if (response.statusCode == 200) {
@@ -233,7 +243,7 @@ class ScanningService {
       throw Exception('Get template JSON error: $e');
     }
   }
-  
+
   /// Grade from JSON data (client-side scanned result)
   /// Gửi answers đã scan từ client lên server để chấm điểm
   static Future<ScanningResult> gradeFromJson({
@@ -249,7 +259,7 @@ class ScanningService {
   }) async {
     try {
       final url = Uri.parse('$baseUrl/grading/grade-from-json/');
-      
+
       final response = await http.post(
         url,
         headers: {
@@ -266,7 +276,7 @@ class ScanningService {
           'total_questions': totalQuestions,
         }),
       );
-      
+
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         return ScanningResult.fromJson(data);
@@ -279,7 +289,3 @@ class ScanningService {
     }
   }
 }
-
-
-
-

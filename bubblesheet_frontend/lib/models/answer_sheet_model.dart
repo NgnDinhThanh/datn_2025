@@ -27,7 +27,6 @@ class AnswerSheet {
 
   factory AnswerSheet.fromJson(Map<String, dynamic> json) {
     String rawId = json['id'] ?? '';
-    // Nếu id có dạng ObjectId('...') thì lấy phần trong dấu '
     if (rawId.startsWith('ObjectId(')) {
       rawId = rawId.substring(9, rawId.length - 2);
     }
@@ -61,4 +60,4 @@ class AnswerSheet {
       'file_preview': filePreview,
     };
   }
-} 
+}

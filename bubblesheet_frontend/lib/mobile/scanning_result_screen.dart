@@ -31,7 +31,6 @@ class ScanningResultScreen extends StatefulWidget {
 class _ScanningResultScreenState extends State<ScanningResultScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
-  // Removed _isSaving and _isSaved - grades are auto-saved via queue + sync
 
   @override
   void initState() {
@@ -45,12 +44,9 @@ class _ScanningResultScreenState extends State<ScanningResultScreen>
     super.dispose();
   }
 
-  // Removed _saveGrade() - grades are auto-saved via queue + sync in nativeScanAndGrade()
-
-  /// Convert answer index (0-4) to letter (A-E)
   String _indexToLetter(dynamic answer) {
     if (answer == null || answer == -1) return '';
-    
+
     int index;
     if (answer is int) {
       index = answer;
@@ -59,7 +55,7 @@ class _ScanningResultScreenState extends State<ScanningResultScreen>
     } else {
       return '';
     }
-    
+
     if (index < 0 || index > 4) return '';
     return String.fromCharCode('A'.codeUnitAt(0) + index);
   }
@@ -80,7 +76,10 @@ class _ScanningResultScreenState extends State<ScanningResultScreen>
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () {
-            final scanningProvider = Provider.of<ScanningProvider>(context, listen: false);
+            final scanningProvider = Provider.of<ScanningProvider>(
+              context,
+              listen: false,
+            );
             scanningProvider.clearResults();
             Navigator.of(context).pop(true);
           },
@@ -91,7 +90,10 @@ class _ScanningResultScreenState extends State<ScanningResultScreen>
             onSelected: (value) {
               switch (value) {
                 case 'scan_another':
-                  final scanningProvider = Provider.of<ScanningProvider>(context, listen: false);
+                  final scanningProvider = Provider.of<ScanningProvider>(
+                    context,
+                    listen: false,
+                  );
                   scanningProvider.clearResults();
                   Navigator.of(context).pushReplacement(
                     MaterialPageRoute(
@@ -123,7 +125,7 @@ class _ScanningResultScreenState extends State<ScanningResultScreen>
         children: [
           // Header with thumbnail and score
           _buildHeader(),
-          
+
           // Tab bar
           Container(
             color: Colors.grey[100],
@@ -140,7 +142,7 @@ class _ScanningResultScreenState extends State<ScanningResultScreen>
               ],
             ),
           ),
-          
+
           // Tab content
           Expanded(
             child: TabBarView(
@@ -158,15 +160,14 @@ class _ScanningResultScreenState extends State<ScanningResultScreen>
   }
 
   Widget _buildHeader() {
-    // Use info section (cropped ID area) if available, fallback to annotated image
-    final thumbnailBase64 = widget.result.infoSectionBase64 ?? widget.result.annotatedImageBase64;
-    
+    final thumbnailBase64 =
+        widget.result.infoSectionBase64 ?? widget.result.annotatedImageBase64;
+
     return Container(
       padding: const EdgeInsets.all(16),
       color: Colors.white,
       child: Column(
         children: [
-          // Thumbnail - shows info section (student/quiz/class IDs)
           if (thumbnailBase64 != null)
             Container(
               height: 100,
@@ -181,12 +182,13 @@ class _ScanningResultScreenState extends State<ScanningResultScreen>
                 child: Image.memory(
                   base64Decode(thumbnailBase64),
                   fit: BoxFit.contain,
-                  errorBuilder: (_, __, ___) => const Icon(Icons.image, color: Colors.grey),
+                  errorBuilder: (_, __, ___) =>
+                      const Icon(Icons.image, color: Colors.grey),
                 ),
               ),
             ),
           const SizedBox(height: 12),
-          
+
           // Score display
           Text(
             '${widget.result.score} / ${widget.result.totalQuestions} = ${widget.result.percentage.toStringAsFixed(1)}',
@@ -204,9 +206,7 @@ class _ScanningResultScreenState extends State<ScanningResultScreen>
   Widget _buildImageTab() {
     if (widget.result.annotatedImageBase64 == null ||
         widget.result.annotatedImageBase64!.isEmpty) {
-      return const Center(
-        child: Text('No annotated image available'),
-      );
+      return const Center(child: Text('No annotated image available'));
     }
 
     try {
@@ -223,45 +223,40 @@ class _ScanningResultScreenState extends State<ScanningResultScreen>
           minScale: 0.5,
           maxScale: 4.0,
           child: Center(
-            child: Image.memory(
-              Uint8List.fromList(bytes),
-              fit: BoxFit.contain,
-            ),
+            child: Image.memory(Uint8List.fromList(bytes), fit: BoxFit.contain),
           ),
         ),
       );
     } catch (e) {
-      return const Center(
-        child: Text('Could not display annotated image'),
-      );
+      return const Center(child: Text('Could not display annotated image'));
     }
   }
 
   Widget _buildQuestionsTab() {
     final correctAnswers = widget.result.correctAnswers ?? {};
     final studentAnswers = widget.result.answers;
-    
+
     // Build list of questions
     final questions = <_QuestionRow>[];
     for (int i = 1; i <= widget.result.totalQuestions; i++) {
       final key = i.toString();
       final correctAns = correctAnswers[key];
       final studentAns = studentAnswers[key];
-      
+
       final correctLetter = _indexToLetter(correctAns);
       final studentLetter = _indexToLetter(studentAns);
-      
-      // Check if multiple marks (student answered with list of multiple items)
+
       String studentResponse = studentLetter;
       if (studentAns is List && studentAns.length > 1) {
         studentResponse = studentAns.map((a) => _indexToLetter(a)).join('');
       }
-      
-      // Determine if correct
+
       bool isCorrect = false;
-      bool isBlank = studentAns == null || studentAns == -1 || 
-                     (studentAns is List && studentAns.isEmpty);
-      
+      bool isBlank =
+          studentAns == null ||
+          studentAns == -1 ||
+          (studentAns is List && studentAns.isEmpty);
+
       if (!isBlank && correctAns != null) {
         if (studentAns is int && correctAns is int) {
           isCorrect = studentAns == correctAns;
@@ -269,16 +264,18 @@ class _ScanningResultScreenState extends State<ScanningResultScreen>
           isCorrect = studentAns[0] == correctAns;
         }
       }
-      
-      questions.add(_QuestionRow(
-        number: i,
-        primaryAnswer: correctLetter,
-        studentResponse: studentResponse,
-        pointsEarned: isCorrect ? 1 : 0,
-        priPoints: 1,
-        isCorrect: isCorrect,
-        isBlank: isBlank,
-      ));
+
+      questions.add(
+        _QuestionRow(
+          number: i,
+          primaryAnswer: correctLetter,
+          studentResponse: studentResponse,
+          pointsEarned: isCorrect ? 1 : 0,
+          priPoints: 1,
+          isCorrect: isCorrect,
+          isBlank: isBlank,
+        ),
+      );
     }
 
     return Column(
@@ -292,24 +289,53 @@ class _ScanningResultScreenState extends State<ScanningResultScreen>
           ),
           child: const Row(
             children: [
-              SizedBox(width: 40, child: Text('#', style: TextStyle(fontWeight: FontWeight.bold))),
-              SizedBox(width: 70, child: Text('Primary\nAnswer', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12))),
-              SizedBox(width: 70, child: Text('Student\nResponse', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12))),
-              SizedBox(width: 60, child: Text('Points\nEarned', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12))),
-              SizedBox(width: 50, child: Text('Pri\nPoints', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12))),
+              SizedBox(
+                width: 40,
+                child: Text('#', style: TextStyle(fontWeight: FontWeight.bold)),
+              ),
+              SizedBox(
+                width: 70,
+                child: Text(
+                  'Primary\nAnswer',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+                ),
+              ),
+              SizedBox(
+                width: 70,
+                child: Text(
+                  'Student\nResponse',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+                ),
+              ),
+              SizedBox(
+                width: 60,
+                child: Text(
+                  'Points\nEarned',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+                ),
+              ),
+              SizedBox(
+                width: 50,
+                child: Text(
+                  'Pri\nPoints',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+                ),
+              ),
               Spacer(),
             ],
           ),
         ),
-        
-        // Questions list
+
         Expanded(
           child: ListView.builder(
             itemCount: questions.length,
             itemBuilder: (context, index) {
               final q = questions[index];
               return Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
                 decoration: BoxDecoration(
                   border: Border(bottom: BorderSide(color: Colors.grey[200]!)),
                 ),
@@ -319,14 +345,20 @@ class _ScanningResultScreenState extends State<ScanningResultScreen>
                       width: 40,
                       child: Text(
                         '${q.number}',
-                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                     SizedBox(
                       width: 70,
                       child: Text(
                         q.primaryAnswer,
-                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                     SizedBox(
@@ -357,21 +389,30 @@ class _ScanningResultScreenState extends State<ScanningResultScreen>
                     const Spacer(),
                     // Status icon
                     if (q.isBlank)
-                      const Text('—', style: TextStyle(color: Colors.orange, fontSize: 18))
+                      const Text(
+                        '—',
+                        style: TextStyle(color: Colors.orange, fontSize: 18),
+                      )
                     else if (q.isCorrect)
-                      const Text('C', style: TextStyle(
-                        color: Colors.green,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 18,
-                        fontStyle: FontStyle.italic,
-                      ))
+                      const Text(
+                        'C',
+                        style: TextStyle(
+                          color: Colors.green,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18,
+                          fontStyle: FontStyle.italic,
+                        ),
+                      )
                     else
-                      const Text('X', style: TextStyle(
-                        color: Colors.red,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 18,
-                        fontStyle: FontStyle.italic,
-                      )),
+                      const Text(
+                        'X',
+                        style: TextStyle(
+                          color: Colors.red,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18,
+                          fontStyle: FontStyle.italic,
+                        ),
+                      ),
                   ],
                 ),
               );
@@ -425,13 +466,10 @@ class _QuestionRow {
   });
 }
 
-/// Full screen image viewer with zoom and pan
 class _FullscreenImageViewer extends StatelessWidget {
   final Uint8List imageBytes;
 
-  const _FullscreenImageViewer({
-    required this.imageBytes,
-  });
+  const _FullscreenImageViewer({required this.imageBytes});
 
   @override
   Widget build(BuildContext context) {
@@ -455,10 +493,7 @@ class _FullscreenImageViewer extends StatelessWidget {
           maxScale: 5.0,
           panEnabled: true,
           scaleEnabled: true,
-          child: Image.memory(
-            imageBytes,
-            fit: BoxFit.contain,
-          ),
+          child: Image.memory(imageBytes, fit: BoxFit.contain),
         ),
       ),
     );

@@ -4,7 +4,6 @@ from rest_framework.views import APIView
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework_simplejwt.tokens import RefreshToken
-from django.contrib.auth import authenticate
 from bson import ObjectId
 import logging
 import traceback
@@ -13,6 +12,7 @@ logger = logging.getLogger(__name__)
 
 from users.models import User
 from users.serializers import UserSerializer
+from users.permissions import IsAdmin
 from classes.models import Class
 from students.models import Student
 from exams.models import Exam
@@ -32,7 +32,10 @@ def test_view(request):
 # Create your views here.
 
 class UserListCreateView(APIView):
-    permission_classes = [AllowAny]  # Allow unauthenticated access for registration
+    def get_permissions(self):
+        if self.request.method == 'POST':
+            return [AllowAny()]  # Register: public
+        return [IsAdmin()]  # List users: admin only
 
     def get(self, request):
         users = User.objects.all()
@@ -42,7 +45,9 @@ class UserListCreateView(APIView):
     def post(self, request):
         try:
             logger.info(f"Received data: {request.data}")
-            serializer = UserSerializer(data=request.data)
+            data = dict(request.data)
+            data.pop('is_admin', None)  # New users never get admin
+            serializer = UserSerializer(data=data)
             if serializer.is_valid():
                 logger.info(f"Validated data: {serializer.validated_data}")
                 user_obj = User(**serializer.validated_data)
@@ -84,7 +89,8 @@ class UserLoginView(APIView):
 
             return Response({
                 'user': UserSerializer(user).data,
-                'token': str(refresh.access_token)  # Only return access token
+                'token': str(refresh.access_token),
+                'is_admin': getattr(user, 'is_admin', False),
             })
         except User.DoesNotExist:
             return Response(
@@ -98,7 +104,16 @@ class UserLoginView(APIView):
             )
 
 class UserDetailView(APIView):
-    permission_classes = [AllowAny]  # Remove authentication requirement
+    permission_classes = [IsAuthenticated]
+
+    def get_permissions(self):
+        return [IsAuthenticated()]
+
+    def _is_admin_or_owner(self, request, user_obj):
+        return (
+            getattr(request.user, 'is_admin', False) or
+            str(request.user.id) == str(user_obj.id)
+        )
 
     def get_object(self, id):
         try:
@@ -114,10 +129,11 @@ class UserDetailView(APIView):
             return None
 
     def get(self, request, id):
-        logger.info(f"GET request for user {id}")
         user_obj = self.get_object(id)
         if not user_obj:
             return Response({'error': 'Not found'}, status=404)
+        if not self._is_admin_or_owner(request, user_obj):
+            return Response({'error': 'Forbidden'}, status=403)
         serializer = UserSerializer(user_obj)
         return Response(serializer.data)
 
@@ -125,7 +141,13 @@ class UserDetailView(APIView):
         user_obj = self.get_object(id)
         if not user_obj:
             return Response({'error': 'Not found'}, status=404)
-        serializer = UserSerializer(user_obj, data=request.data)
+        if not self._is_admin_or_owner(request, user_obj):
+            return Response({'error': 'Forbidden'}, status=403)
+        # Non-admin cannot change is_admin
+        data = dict(request.data)
+        if not getattr(request.user, 'is_admin', False):
+            data.pop('is_admin', None)
+        serializer = UserSerializer(user_obj, data=data, partial=True)
         if serializer.is_valid():
             for attr, value in serializer.validated_data.items():
                 setattr(user_obj, attr, value)
@@ -137,6 +159,8 @@ class UserDetailView(APIView):
         user_obj = self.get_object(id)
         if not user_obj:
             return Response({'error': 'Not found'}, status=404)
+        if not getattr(request.user, 'is_admin', False):
+            return Response({'error': 'Only admin can delete users'}, status=403)
         user_obj.delete()
         return Response(status=204)
 
@@ -178,6 +202,7 @@ class CurrentUserProfileView(APIView):
                 'username': user.username,
                 'email': user.email,
                 'is_teacher': user.is_teacher,
+                'is_admin': getattr(user, 'is_admin', False),
                 'statistics': stats,
             }
             
@@ -190,3 +215,28 @@ class CurrentUserProfileView(APIView):
                 {"error": "Failed to retrieve user profile", "detail": str(e)},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+
+
+class AdminUsersListView(APIView):
+    """List all users - admin only."""
+    permission_classes = [IsAuthenticated, IsAdmin]
+
+    def get(self, request):
+        users = User.objects.all()
+        serializer = UserSerializer(users, many=True)
+        return Response(serializer.data)
+
+
+class AdminStatsView(APIView):
+    """System-wide statistics - admin only."""
+    permission_classes = [IsAuthenticated, IsAdmin]
+
+    def get(self, request):
+        stats = {
+            'total_users': User.objects.count(),
+            'total_classes': Class.objects.count(),
+            'total_students': Student.objects.count(),
+            'total_quizzes': Exam.objects.count(),
+            'total_graded_papers': Grade.objects.count(),
+        }
+        return Response(stats)

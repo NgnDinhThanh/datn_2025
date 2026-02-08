@@ -18,9 +18,17 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
+from django.http import JsonResponse
+
+
+def api_ping(request):
+    """GET /api/ping/ — dùng để test từ trình duyệt trên mobile (không cần auth)."""
+    return JsonResponse({"ok": True, "message": "API reachable"})
+
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('api/ping/', api_ping),
     path('api/users/', include('users.urls')),
     path('api/classes/', include('classes.urls')),
     path('api/students/', include('students.urls')),

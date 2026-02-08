@@ -272,10 +272,33 @@ def grade_from_json_api(request):
         # Build answer key dict for this version
         answer_key_dict = get_answer_key_for_version(answer_key_obj, version_code)
         if answer_key_dict is None:
+            # Align behavior with scan_and_grade(): return 0 point + error message
+            total_questions_fallback = None
+            try:
+                total_questions_fallback = int(data.get('total_questions') or 0)
+            except (TypeError, ValueError):
+                total_questions_fallback = 0
+            if not total_questions_fallback:
+                total_questions_fallback = getattr(answer_key_obj, 'num_questions', 0) or 0
+
+            student_id = data.get('student_id') or ''
+            class_id = data.get('class_id')
+            answersheet_id = data.get('answersheet_id')
+
             return Response({
-                'success': False,
+                'success': True,
+                'score': 0,
+                'total_questions': total_questions_fallback,
+                'percentage': 0.0,
+                'student_id': student_id,
+                'quiz_id': quiz_id,
+                'class_id': class_id,
+                'answers': answers if isinstance(answers, dict) else {},
+                'correct_answers': {},
+                'version_code': version_code,
+                'annotated_image_base64': None,
                 'error': f'Version code {version_code} not found in answer key',
-            }, status=400)
+            }, status=200)
 
         # Parse answers (can be dict or JSON string)
         import json as _json

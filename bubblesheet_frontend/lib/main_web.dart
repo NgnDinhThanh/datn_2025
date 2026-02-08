@@ -9,7 +9,6 @@ import 'package:bubblesheet_frontend/screens/quizzes/quiz_detail_screen.dart';
 import 'package:bubblesheet_frontend/screens/quizzes/quiz_edit_answer_key_screen.dart';
 import 'package:bubblesheet_frontend/screens/quizzes/quiz_form_screen.dart';
 import 'package:bubblesheet_frontend/screens/quizzes/quizz_list_screen.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
@@ -26,12 +25,12 @@ import 'screens/classes/class_gradebook_screen.dart';
 import 'screens/students/student_form_screen.dart';
 import 'screens/students/student_import_screen.dart';
 import 'screens/students/student_detail_screen.dart';
+import 'screens/admin/admin_screen.dart';
 import 'screens/answer_sheets/answer_sheet_list_screen.dart';
 import 'screens/answer_sheets/answer_sheet_form_name_screen.dart';
 import 'screens/answer_sheets/answer_sheet_form_header_screen.dart';
 import 'screens/answer_sheets/answer_sheet_form_count_screen.dart';
 import 'screens/answer_sheets/answer_sheet_form_question_screen.dart';
-import 'screens/answer_sheets/answer_sheet_form_preview_screen.dart';
 
 void main() {
   runApp(
@@ -150,6 +149,10 @@ class BubbleSheetApp extends StatelessWidget {
           path: '/user',
           builder: (context, state) => const MainLayout(child: UserScreen()),
         ),
+        GoRoute(
+          path: '/admin',
+          builder: (context, state) => const MainLayout(child: AdminScreen()),
+        ),
         // Answer Sheet routes
         GoRoute(
           path: '/answer-sheets',
@@ -176,11 +179,11 @@ class BubbleSheetApp extends StatelessWidget {
           builder: (context, state) =>
               const MainLayout(child: AnswerSheetFormQuestionScreen()),
         ),
-        GoRoute(
-          path: '/answer-sheets/create/preview',
-          builder: (context, state) =>
-              const MainLayout(child: AnswerSheetFormPreviewScreen()),
-        ),
+        // GoRoute(
+        //   path: '/answer-sheets/create/preview',
+        //   builder: (context, state) =>
+        //       const MainLayout(child: AnswerSheetFormPreviewScreen()),
+        // ),
         GoRoute(
           path: '/quizzes',
           builder: (context, state) => MainLayout(child: QuizzListScreen()),
@@ -221,9 +224,11 @@ class BubbleSheetApp extends StatelessWidget {
         final loggedIn = authProvider.currentUser != null;
         final isAtLogin = state.uri.path == '/login';
         final isAtRegister = state.uri.path == '/register';
+        final isAtAdmin = state.uri.path == '/admin';
 
         if (!loggedIn && !isAtLogin && !isAtRegister) return '/login';
         if (loggedIn && (isAtLogin || isAtRegister)) return '/user';
+        if (loggedIn && isAtAdmin && !authProvider.isAdmin) return '/user';
         return null;
       },
       refreshListenable: authProvider,

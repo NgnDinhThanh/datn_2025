@@ -4,6 +4,7 @@ import 'package:bubblesheet_frontend/models/exam_model.dart';
 import 'package:bubblesheet_frontend/services/api_service.dart';
 import 'package:bubblesheet_frontend/services/auth_helper.dart';
 import 'package:http/http.dart' as http;
+
 class ExamService {
   static Future<List<ExamModel>> getExams(String? token) async {
     final response = await http.get(
@@ -35,7 +36,10 @@ class ExamService {
     throw Exception('Failed to load exams: Status ${response.statusCode}');
   }
 
-  static Future<Map<String, dynamic>> createExam(Map<String, dynamic> examData, String? token) async {
+  static Future<Map<String, dynamic>> createExam(
+    Map<String, dynamic> examData,
+    String? token,
+  ) async {
     final response = await http.post(
       Uri.parse('${ApiService.baseUrl}/exams/'),
       headers: {
@@ -51,7 +55,11 @@ class ExamService {
     throw Exception('Failed to create exam: Status ${response.statusCode}');
   }
 
-  static Future<Map<String, dynamic>> updateExam(String examId, Map<String, dynamic> examData, String? token) async {
+  static Future<Map<String, dynamic>> updateExam(
+    String examId,
+    Map<String, dynamic> examData,
+    String? token,
+  ) async {
     final response = await http.put(
       Uri.parse('${ApiService.baseUrl}/exams/$examId/'),
       headers: {
@@ -88,6 +96,8 @@ class ExamService {
       final data = json.decode(response.body);
       return ExamModel.fromJson(data);
     }
-    throw Exception('Failed to fetch exam detail: Status ${response.statusCode}');
+    throw Exception(
+      'Failed to fetch exam detail: Status ${response.statusCode}',
+    );
   }
 }

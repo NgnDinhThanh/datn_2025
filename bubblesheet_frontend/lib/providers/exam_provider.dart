@@ -30,7 +30,6 @@ class ExamProvider with ChangeNotifier {
       final cached = ExamCacheService.getCachedExams();
       if (cached != null && cached.isNotEmpty) {
         _exams = cached.map((json) => ExamModel.fromJson(json)).toList();
-        // ✅ Merge với pending CRUD operations
         _mergePendingCrudOperations();
         _isLoading = false;
         notifyListeners();
@@ -48,7 +47,6 @@ class ExamProvider with ChangeNotifier {
           await ExamCacheService.cacheExams(
             _exams.map((e) => e.toJson()).toList(),
           );
-          // ✅ Merge với pending CRUD operations sau khi fetch từ API
           _mergePendingCrudOperations();
           _error = null;
           notifyListeners();
@@ -76,7 +74,6 @@ class ExamProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  /// Merge pending CRUD operations vào danh sách exams hiện tại
   void _mergePendingCrudOperations() {
     try {
       final pendingOps = CrudOperationsQueueService.getPendingOperations()
@@ -91,16 +88,25 @@ class ExamProvider with ChangeNotifier {
         if (type == 'CREATE') {
           // Thêm exam mới (nếu chưa có - check theo name và date để tránh duplicate)
           final examName = data['name'] ?? '';
-          final examDate = data['date'] ?? DateTime.now().toIso8601String().substring(0, 10);
-          if (examName.isNotEmpty && !_exams.any((e) => e.name == examName && e.date == examDate && e.id.startsWith('temp_'))) {
-            _exams.add(ExamModel(
-              id: 'temp_${DateTime.now().millisecondsSinceEpoch}',
-              name: examName,
-              answersheet: data['answersheet'] ?? '',
-              date: examDate,
-              class_codes: List<String>.from(data['class_codes'] ?? []),
-              teacher_id: '', // Server sẽ tự động set từ token
-            ));
+          final examDate =
+              data['date'] ?? DateTime.now().toIso8601String().substring(0, 10);
+          if (examName.isNotEmpty &&
+              !_exams.any(
+                (e) =>
+                    e.name == examName &&
+                    e.date == examDate &&
+                    e.id.startsWith('temp_'),
+              )) {
+            _exams.add(
+              ExamModel(
+                id: 'temp_${DateTime.now().millisecondsSinceEpoch}',
+                name: examName,
+                answersheet: data['answersheet'] ?? '',
+                date: examDate,
+                class_codes: List<String>.from(data['class_codes'] ?? []),
+                teacher_id: '', // Server sẽ tự động set từ token
+              ),
+            );
           }
         } else if (type == 'UPDATE' && entityId != null) {
           // Cập nhật exam
@@ -108,14 +114,18 @@ class ExamProvider with ChangeNotifier {
           if (entityId.startsWith('ObjectId(')) {
             normalizedId = entityId.substring(9, entityId.length - 2);
           }
-          final index = _exams.indexWhere((e) => e.id == entityId || e.id == normalizedId);
+          final index = _exams.indexWhere(
+            (e) => e.id == entityId || e.id == normalizedId,
+          );
           if (index != -1) {
             _exams[index] = ExamModel(
               id: _exams[index].id,
               name: data['name'] ?? _exams[index].name,
               answersheet: data['answersheet'] ?? _exams[index].answersheet,
               date: data['date'] ?? _exams[index].date,
-              class_codes: List<String>.from(data['class_codes'] ?? _exams[index].class_codes),
+              class_codes: List<String>.from(
+                data['class_codes'] ?? _exams[index].class_codes,
+              ),
               teacher_id: _exams[index].teacher_id,
             );
           }
@@ -134,9 +144,9 @@ class ExamProvider with ChangeNotifier {
   }
 
   Future<String?> addExam(
-      BuildContext context,
-      Map<String, dynamic> examData,
-      ) async {
+    BuildContext context,
+    Map<String, dynamic> examData,
+  ) async {
     final token = Provider.of<AuthProvider>(context, listen: false).token;
     if (token == null) {
       throw Exception('Not authenticated');
@@ -159,14 +169,18 @@ class ExamProvider with ChangeNotifier {
         );
         // Optimistic UI: Add vào local list tạm thời
         final tempId = 'temp_${DateTime.now().millisecondsSinceEpoch}';
-        _exams.add(ExamModel(
-          id: tempId,
-          name: examData['name'] ?? '',
-          answersheet: examData['answersheet'] ?? '',
-          date: examData['date'] ?? DateTime.now().toIso8601String().substring(0, 10),
-          class_codes: List<String>.from(examData['class_codes'] ?? []),
-          teacher_id: '', // Server sẽ tự động set từ token
-        ));
+        _exams.add(
+          ExamModel(
+            id: tempId,
+            name: examData['name'] ?? '',
+            answersheet: examData['answersheet'] ?? '',
+            date:
+                examData['date'] ??
+                DateTime.now().toIso8601String().substring(0, 10),
+            class_codes: List<String>.from(examData['class_codes'] ?? []),
+            teacher_id: '', // Server sẽ tự động set từ token
+          ),
+        );
         notifyListeners();
         return tempId;
       }
@@ -179,14 +193,18 @@ class ExamProvider with ChangeNotifier {
       );
       // Optimistic UI: Add vào local list tạm thời
       final tempId = 'temp_${DateTime.now().millisecondsSinceEpoch}';
-      _exams.add(ExamModel(
-        id: tempId,
-        name: examData['name'] ?? '',
-        answersheet: examData['answersheet'] ?? '',
-        date: examData['date'] ?? DateTime.now().toIso8601String().substring(0, 10),
-        class_codes: List<String>.from(examData['class_codes'] ?? []),
-        teacher_id: '', // Server sẽ tự động set từ token
-      ));
+      _exams.add(
+        ExamModel(
+          id: tempId,
+          name: examData['name'] ?? '',
+          answersheet: examData['answersheet'] ?? '',
+          date:
+              examData['date'] ??
+              DateTime.now().toIso8601String().substring(0, 10),
+          class_codes: List<String>.from(examData['class_codes'] ?? []),
+          teacher_id: '', // Server sẽ tự động set từ token
+        ),
+      );
       notifyListeners();
       return tempId;
     }
@@ -208,13 +226,15 @@ class ExamProvider with ChangeNotifier {
       normalizedId = examId.substring(9, examId.length - 2);
     }
 
-    // ✅ Check network
     final hasNetwork = await SyncService.hasNetworkConnection();
 
     if (hasNetwork) {
-      // ✅ Online: Gọi API ngay
       try {
-        final response = await ExamService.updateExam(normalizedId, examData, token);
+        final response = await ExamService.updateExam(
+          normalizedId,
+          examData,
+          token,
+        );
         await fetchExams(context);
         return response['id'] ?? response['_id']?.toString();
       } catch (e) {
@@ -226,14 +246,18 @@ class ExamProvider with ChangeNotifier {
           data: examData,
         );
         // Optimistic UI: Update local list
-        final index = _exams.indexWhere((e) => e.id == examId || e.id == normalizedId);
+        final index = _exams.indexWhere(
+          (e) => e.id == examId || e.id == normalizedId,
+        );
         if (index != -1) {
           _exams[index] = ExamModel(
             id: examId,
             name: examData['name'] ?? _exams[index].name,
             answersheet: examData['answersheet'] ?? _exams[index].answersheet,
             date: examData['date'] ?? _exams[index].date,
-            class_codes: List<String>.from(examData['class_codes'] ?? _exams[index].class_codes),
+            class_codes: List<String>.from(
+              examData['class_codes'] ?? _exams[index].class_codes,
+            ),
             teacher_id: _exams[index].teacher_id,
           );
           notifyListeners();
@@ -241,7 +265,6 @@ class ExamProvider with ChangeNotifier {
         return examId;
       }
     } else {
-      // ✅ Offline: Queue operation
       await CrudOperationsQueueService.addOperation(
         type: 'UPDATE',
         entity: 'Exam',
@@ -249,14 +272,18 @@ class ExamProvider with ChangeNotifier {
         data: examData,
       );
       // Optimistic UI: Update local list
-      final index = _exams.indexWhere((e) => e.id == examId || e.id == normalizedId);
+      final index = _exams.indexWhere(
+        (e) => e.id == examId || e.id == normalizedId,
+      );
       if (index != -1) {
         _exams[index] = ExamModel(
           id: examId,
           name: examData['name'] ?? _exams[index].name,
           answersheet: examData['answersheet'] ?? _exams[index].answersheet,
           date: examData['date'] ?? _exams[index].date,
-          class_codes: List<String>.from(examData['class_codes'] ?? _exams[index].class_codes),
+          class_codes: List<String>.from(
+            examData['class_codes'] ?? _exams[index].class_codes,
+          ),
           teacher_id: _exams[index].teacher_id,
         );
         notifyListeners();
@@ -277,11 +304,9 @@ class ExamProvider with ChangeNotifier {
       normalizedId = examId.substring(9, examId.length - 2);
     }
 
-    // ✅ Check network
     final hasNetwork = await SyncService.hasNetworkConnection();
 
     if (hasNetwork) {
-      // ✅ Online: Gọi API ngay
       try {
         await ExamService.deleteExam(normalizedId, token);
         await fetchExams(context);
@@ -298,7 +323,6 @@ class ExamProvider with ChangeNotifier {
         notifyListeners();
       }
     } else {
-      // ✅ Offline: Queue operation
       await CrudOperationsQueueService.addOperation(
         type: 'DELETE',
         entity: 'Exam',

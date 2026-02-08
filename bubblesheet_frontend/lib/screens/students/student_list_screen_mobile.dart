@@ -20,4 +20,4 @@ class StudentListScreenMobile extends StatelessWidget {
       ),
     );
   }
-} 
+}

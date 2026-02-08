@@ -7,13 +7,13 @@ import '../../services/answer_key_service.dart';
 
 class QuizEditAnswerKeyScreen extends StatefulWidget {
   final String quizId;
-  const QuizEditAnswerKeyScreen({
-    required this.quizId,
-    Key? key,
-  }) : super(key: key);
+
+  const QuizEditAnswerKeyScreen({required this.quizId, Key? key})
+    : super(key: key);
 
   @override
-  State<QuizEditAnswerKeyScreen> createState() => _QuizEditAnswerKeyScreenState();
+  State<QuizEditAnswerKeyScreen> createState() =>
+      _QuizEditAnswerKeyScreenState();
 }
 
 class _QuizEditAnswerKeyScreenState extends State<QuizEditAnswerKeyScreen> {
@@ -111,107 +111,128 @@ class _QuizEditAnswerKeyScreenState extends State<QuizEditAnswerKeyScreen> {
       return const Center(child: CircularProgressIndicator());
     }
     return Center(
-        child: Container(
-          constraints: const BoxConstraints(maxWidth: 600),
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              const SizedBox(height: 16),
-              Text(
-                'Edit Anser Keys for $quizName',
-                style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 16),
-              Text('Upload Answer Bank File', style: Theme.of(context).textTheme.titleMedium),
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  ElevatedButton.icon(
-                    onPressed: _isGenerating ? null : _pickFile,
-                    icon: const Icon(Icons.upload_file),
-                    label: const Text('Choose File'),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(_answerFile?.name ?? 'No file selected', overflow: TextOverflow.ellipsis),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 20),
-              Text('Number of Versions', style: Theme.of(context).textTheme.titleMedium),
-              const SizedBox(height: 8),
-              TextField(
-                controller: _numVersionsController,
-                keyboardType: TextInputType.number,
-                decoration: const InputDecoration(
-                  border: OutlineInputBorder(),
-                  hintText: 'Enter number of versions',
-                ),
-                enabled: !_isGenerating,
-              ),
-              const SizedBox(height: 24),
-              if (_error != null) ...[
-                Text(_error!, style: const TextStyle(color: Colors.red)),
-                const SizedBox(height: 12),
-              ],
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  ElevatedButton.icon(
-                    onPressed: _isGenerating ? null : _generateKeys,
-                    icon: _isGenerating
-                        ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
-                        : const Icon(Icons.shuffle),
-                    label: Text(_isGenerating ? 'Generating...' : 'Generate Answer Keys'),
-                  ),
-                  const SizedBox(width: 16),
-                  OutlinedButton(
-                    onPressed: () {
-                      context.go('/quizzes/${widget.quizId}');
-                    },
-                    child: const Text('Back to Quiz Detail'),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 32),
-              if (_generatedKeys != null) ...[
-                const Divider(),
-                Text('Generated Answer Keys', style: Theme.of(context).textTheme.titleLarge),
-                const SizedBox(height: 12),
-                SizedBox(
-                  height: 300,
-                  child: ListView.builder(
-                    itemCount: _generatedKeys!.length,
-                    itemBuilder: (context, i) {
-                      final version = _generatedKeys![i];
-                      return Card(
-                        margin: const EdgeInsets.symmetric(vertical: 6),
-                        child: ListTile(
-                          title: Text('Version ${version['version_code']}'),
-                          subtitle: Text(
-                            version['questions']
-                                .map((q) => '${q['order']}: ${q['answer']}')
-                                .join(', '),
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                ),
-                const SizedBox(height: 16),
+      child: Container(
+        constraints: const BoxConstraints(maxWidth: 600),
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const SizedBox(height: 16),
+            Text(
+              'Edit Anser Keys for $quizName',
+              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Upload Answer Bank File',
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            const SizedBox(height: 8),
+            Row(
+              children: [
                 ElevatedButton.icon(
-                  onPressed: () async {
-                    await AnswerKeyService.downloadAllAnswerKeysExcel(context, widget.quizId);
-                  },
-                  icon: const Icon(Icons.download),
-                  label: const Text('Download All'),
+                  onPressed: _isGenerating ? null : _pickFile,
+                  icon: const Icon(Icons.upload_file),
+                  label: const Text('Choose File'),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    _answerFile?.name ?? 'No file selected',
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
               ],
+            ),
+            const SizedBox(height: 20),
+            Text(
+              'Number of Versions',
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            const SizedBox(height: 8),
+            TextField(
+              controller: _numVersionsController,
+              keyboardType: TextInputType.number,
+              decoration: const InputDecoration(
+                border: OutlineInputBorder(),
+                hintText: 'Enter number of versions',
+              ),
+              enabled: !_isGenerating,
+            ),
+            const SizedBox(height: 24),
+            if (_error != null) ...[
+              Text(_error!, style: const TextStyle(color: Colors.red)),
+              const SizedBox(height: 12),
             ],
-          ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                ElevatedButton.icon(
+                  onPressed: _isGenerating ? null : _generateKeys,
+                  icon: _isGenerating
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.shuffle),
+                  label: Text(
+                    _isGenerating ? 'Generating...' : 'Generate Answer Keys',
+                  ),
+                ),
+                const SizedBox(width: 16),
+                OutlinedButton(
+                  onPressed: () {
+                    context.go('/quizzes/${widget.quizId}');
+                  },
+                  child: const Text('Back to Quiz Detail'),
+                ),
+              ],
+            ),
+            const SizedBox(height: 32),
+            if (_generatedKeys != null) ...[
+              const Divider(),
+              Text(
+                'Generated Answer Keys',
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
+              const SizedBox(height: 12),
+              SizedBox(
+                height: 300,
+                child: ListView.builder(
+                  itemCount: _generatedKeys!.length,
+                  itemBuilder: (context, i) {
+                    final version = _generatedKeys![i];
+                    return Card(
+                      margin: const EdgeInsets.symmetric(vertical: 6),
+                      child: ListTile(
+                        title: Text('Version ${version['version_code']}'),
+                        subtitle: Text(
+                          version['questions']
+                              .map((q) => '${q['order']}: ${q['answer']}')
+                              .join(', '),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+              const SizedBox(height: 16),
+              ElevatedButton.icon(
+                onPressed: () async {
+                  await AnswerKeyService.downloadAllAnswerKeysExcel(
+                    context,
+                    widget.quizId,
+                  );
+                },
+                icon: const Icon(Icons.download),
+                label: const Text('Download All'),
+              ),
+            ],
+          ],
         ),
-      );
+      ),
+    );
   }
 }

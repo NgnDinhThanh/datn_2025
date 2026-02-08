@@ -35,9 +35,6 @@ class AnswerKeyCacheService {
     await box.clear();
   }
 
-  //   Grade offline with cached answer key
-  /// Chấm điểm offline với cached answer key
-  /// Trả về: {score, totalQuestions, percentage, correctAnswers}
   static Map<String, dynamic>? gradeOffline({
     required String quizId,
     required String versionCode,
@@ -70,10 +67,18 @@ class AnswerKeyCacheService {
       }
     }
 
-    // Nếu không tìm thấy version, dùng version đầu tiên
+    // STRICT: Nếu không tìm thấy version -> trả 0 điểm + báo lỗi (không fallback)
     if (matchedVersion == null) {
-      print('[gradeOffline] Version not found, using first version');
-      matchedVersion = Map<String, dynamic>.from(versions[0]);
+      final totalQuestionsFallback = _inferTotalQuestionsFromVersions(versions);
+      print('[gradeOffline] Version not found: $versionCode');
+      return {
+        'score': 0,
+        'totalQuestions': totalQuestionsFallback,
+        'percentage': 0.0,
+        'correctAnswers': <String, int>{},
+        'error': 'Version code $versionCode not found in answer key',
+        'versionNotFound': true,
+      };
     }
 
     final questions = matchedVersion['questions'] as List?;
@@ -84,22 +89,19 @@ class AnswerKeyCacheService {
 
     print('[gradeOffline] Found ${questions.length} questions');
 
-    // Build correct answers map: {"1": 0, "2": 1, ...}
-    // Key: question order (1-based string)
-    // Value: answer index (0=A, 1=B, 2=C, 3=D, 4=E)
     final correctAnswers = <String, int>{};
     for (final q in questions) {
       final order = q['order'];
       final answer = q['answer'] as String?;
 
       if (order != null && answer != null && answer.isNotEmpty) {
-        final answerIndex = answer.toUpperCase().codeUnitAt(0) - 'A'.codeUnitAt(0);
+        final answerIndex =
+            answer.toUpperCase().codeUnitAt(0) - 'A'.codeUnitAt(0);
         correctAnswers[order.toString()] = answerIndex;
         print('[gradeOffline] Q$order: correct=$answer (index=$answerIndex)');
       }
     }
 
-    // Chấm điểm
     int score = 0;
     final totalQuestions = correctAnswers.length;
 
@@ -107,7 +109,6 @@ class AnswerKeyCacheService {
       final questionKey = entry.key;
       final correctIndex = entry.value;
 
-      // Student answer có thể là: int, List<int>, hoặc String
       final studentAnswer = studentAnswers[questionKey];
       int? studentIndex;
 
@@ -119,7 +120,9 @@ class AnswerKeyCacheService {
         studentIndex = int.tryParse(studentAnswer);
       }
 
-      print('[gradeOffline] Q$questionKey: student=$studentIndex, correct=$correctIndex, match=${studentIndex == correctIndex}');
+      print(
+        '[gradeOffline] Q$questionKey: student=$studentIndex, correct=$correctIndex, match=${studentIndex == correctIndex}',
+      );
 
       if (studentIndex != null && studentIndex == correctIndex) {
         score++;
@@ -138,5 +141,15 @@ class AnswerKeyCacheService {
       'percentage': percentage,
       'correctAnswers': correctAnswers,
     };
+  }
+
+  static int _inferTotalQuestionsFromVersions(List versions) {
+    try {
+      final first = versions.isNotEmpty ? versions[0] : null;
+      if (first is Map && first['questions'] is List) {
+        return (first['questions'] as List).length;
+      }
+    } catch (_) {}
+    return 0;
   }
 }

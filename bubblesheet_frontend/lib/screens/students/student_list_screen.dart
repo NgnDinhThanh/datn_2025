@@ -29,7 +29,6 @@ class _StudentListScreenState extends State<StudentListScreen> {
   final List<int> _pageSizeOptions = [10, 25, 50, 100];
   final TextEditingController _searchController = TextEditingController();
 
-  // final ScrollController _verticalController = ScrollController();
   final ScrollController _horizontalController = ScrollController();
 
   @override
@@ -109,12 +108,10 @@ class _StudentListScreenState extends State<StudentListScreen> {
       );
 
       if (response.statusCode == 200) {
-        // Create blob from response bytes
         final bytes = response.bodyBytes;
         final blob = html.Blob([bytes]);
         final blobUrl = html.Url.createObjectUrlFromBlob(blob);
 
-        // Create anchor element and trigger download
         final anchor = html.AnchorElement(href: blobUrl)
           ..setAttribute(
             'download',
@@ -122,7 +119,6 @@ class _StudentListScreenState extends State<StudentListScreen> {
           )
           ..click();
 
-        // Clean up
         html.Url.revokeObjectUrl(blobUrl);
 
         ScaffoldMessenger.of(context).showSnackBar(
@@ -171,8 +167,6 @@ class _StudentListScreenState extends State<StudentListScreen> {
         }
 
         final allClasses = context.read<ClassProvider>().classes;
-
-        // Lọc và phân trang
         final filtered = students.where((s) {
           final query = _searchText.toLowerCase();
           final inId = s.studentId.toLowerCase().contains(query);

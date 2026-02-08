@@ -30,7 +30,6 @@ class StudentProvider with ChangeNotifier {
       final cached = StudentCacheService.getCachedStudents();
       if (cached != null && cached.isNotEmpty) {
         _students = cached.map((json) => Student.fromJson(json)).toList();
-        // ✅ Merge với pending CRUD operations
         _mergePendingCrudOperations();
         _isLoading = false;
         notifyListeners();
@@ -48,7 +47,6 @@ class StudentProvider with ChangeNotifier {
           await StudentCacheService.cacheStudents(
             _students.map((s) => s.toJson()).toList(),
           );
-          // ✅ Merge với pending CRUD operations sau khi fetch từ API
           _mergePendingCrudOperations();
           _error = null;
           notifyListeners();
@@ -76,7 +74,6 @@ class StudentProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  /// Merge pending CRUD operations vào danh sách students hiện tại
   void _mergePendingCrudOperations() {
     try {
       final pendingOps = CrudOperationsQueueService.getPendingOperations()
@@ -89,7 +86,6 @@ class StudentProvider with ChangeNotifier {
         final data = Map<String, dynamic>.from(op['data'] as Map);
 
         if (type == 'CREATE') {
-          // Thêm student mới (nếu chưa có)
           final studentId = data['student_id'] as String? ?? '';
           if (studentId.isNotEmpty &&
               !_students.any((s) => s.studentId == studentId)) {
@@ -136,24 +132,20 @@ class StudentProvider with ChangeNotifier {
       throw Exception('Not authenticated');
     }
 
-    // ✅ Check network
     final hasNetwork = await SyncService.hasNetworkConnection();
 
     if (hasNetwork) {
-      // ✅ Online: Gọi API ngay
       try {
         final result = await ApiService.addStudent(studentData);
         await fetchStudents(context);
         return result;
       } catch (e) {
-        // Nếu API fail, queue lại
         await CrudOperationsQueueService.addOperation(
           type: 'CREATE',
           entity: 'Student',
           entityId: null,
           data: studentData,
         );
-        // Optimistic UI: Add vào local list
         _students.add(
           Student(
             id: 'temp_${DateTime.now().millisecondsSinceEpoch}',
@@ -167,14 +159,12 @@ class StudentProvider with ChangeNotifier {
         return {'id': 'temp_${DateTime.now().millisecondsSinceEpoch}'};
       }
     } else {
-      // ✅ Offline: Queue operation
       await CrudOperationsQueueService.addOperation(
         type: 'CREATE',
         entity: 'Student',
         entityId: null,
         data: studentData,
       );
-      // Optimistic UI: Add vào local list
       _students.add(
         Student(
           id: 'temp_${DateTime.now().millisecondsSinceEpoch}',
@@ -207,11 +197,9 @@ class StudentProvider with ChangeNotifier {
       throw Exception('Not authenticated');
     }
 
-    // ✅ Check network
     final hasNetwork = await SyncService.hasNetworkConnection();
 
     if (hasNetwork) {
-      // ✅ Online: Gọi API ngay
       try {
         await StudentService.updateStudent(studentId, data, token);
         await fetchStudents(context);
@@ -239,14 +227,12 @@ class StudentProvider with ChangeNotifier {
         }
       }
     } else {
-      // ✅ Offline: Queue operation
       await CrudOperationsQueueService.addOperation(
         type: 'UPDATE',
         entity: 'Student',
         entityId: studentId,
         data: data,
       );
-      // Optimistic UI: Update local list
       final index = _students.indexWhere((s) => s.studentId == studentId);
       if (index != -1) {
         _students[index] = Student(
@@ -268,36 +254,29 @@ class StudentProvider with ChangeNotifier {
     if (token == null) {
       throw Exception('Not authenticated');
     }
-
-    // ✅ Check network
     final hasNetwork = await SyncService.hasNetworkConnection();
 
     if (hasNetwork) {
-      // ✅ Online: Gọi API ngay
       try {
         await StudentService.deleteStudent(studentId, token);
         await fetchStudents(context);
       } catch (e) {
-        // Nếu API fail, queue lại
         await CrudOperationsQueueService.addOperation(
           type: 'DELETE',
           entity: 'Student',
           entityId: studentId,
           data: {},
         );
-        // Optimistic UI: Remove từ local list
         _students.removeWhere((s) => s.studentId == studentId);
         notifyListeners();
       }
     } else {
-      // ✅ Offline: Queue operation
       await CrudOperationsQueueService.addOperation(
         type: 'DELETE',
         entity: 'Student',
         entityId: studentId,
         data: {},
       );
-      // Optimistic UI: Remove từ local list
       _students.removeWhere((s) => s.studentId == studentId);
       notifyListeners();
     }

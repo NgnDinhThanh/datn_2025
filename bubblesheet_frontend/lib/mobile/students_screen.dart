@@ -1,5 +1,6 @@
 import 'package:bubblesheet_frontend/mobile/student_detail_screen.dart';
 import 'package:bubblesheet_frontend/mobile/student_form_dialog.dart';
+import 'package:bubblesheet_frontend/providers/class_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/student_model.dart';
@@ -23,7 +24,11 @@ class _StudentsScreenState extends State<StudentsScreen> {
     super.initState();
     ApiService.setContext(context);
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      Provider.of<StudentProvider>(context, listen: false).fetchStudents(context);
+      Provider.of<StudentProvider>(
+        context,
+        listen: false,
+      ).fetchStudents(context);
+      context.read<ClassProvider>().fetchClasses(context);
     });
   }
 
@@ -31,11 +36,14 @@ class _StudentsScreenState extends State<StudentsScreen> {
     List<Student> filtered = students;
     // Search
     if (_search.isNotEmpty) {
-      filtered = filtered.where((s) =>
-        s.firstName.toLowerCase().contains(_search.toLowerCase()) ||
-        s.lastName.toLowerCase().contains(_search.toLowerCase()) ||
-        s.studentId.toLowerCase().contains(_search.toLowerCase())
-      ).toList();
+      filtered = filtered
+          .where(
+            (s) =>
+                s.firstName.toLowerCase().contains(_search.toLowerCase()) ||
+                s.lastName.toLowerCase().contains(_search.toLowerCase()) ||
+                s.studentId.toLowerCase().contains(_search.toLowerCase()),
+          )
+          .toList();
     }
     // Sort
     switch (_sortKey) {
@@ -62,10 +70,16 @@ class _StudentsScreenState extends State<StudentsScreen> {
         children: [
           // Custom Header
           Container(
-            padding: const EdgeInsets.only(top: 16, bottom: 16, left: 16, right: 16),
+            padding: const EdgeInsets.only(
+              top: 16,
+              bottom: 16,
+              left: 16,
+              right: 16,
+            ),
             decoration: const BoxDecoration(
-              color: Color(0xFF2E7D32), // ZipGrade green
-              borderRadius: BorderRadius.vertical(bottom: Radius.circular(20)),
+              color: Color(0xFF2E7D32),
+              // ZipGrade green
+              // borderRadius: BorderRadius.vertical(bottom: Radius.circular(20)),
               boxShadow: [
                 BoxShadow(
                   color: Colors.black26,
@@ -76,7 +90,10 @@ class _StudentsScreenState extends State<StudentsScreen> {
             ),
             child: SafeArea(
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
@@ -104,23 +121,31 @@ class _StudentsScreenState extends State<StudentsScreen> {
                       children: [
                         // Sort Dropdown
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 8,
+                          ),
                           decoration: BoxDecoration(
                             color: Colors.white,
-                            borderRadius: BorderRadius.circular(8),
+                            // borderRadius: BorderRadius.circular(8),
                             border: Border.all(color: const Color(0xFF2E7D32)),
                           ),
                           child: DropdownButtonHideUnderline(
                             child: DropdownButton<String>(
                               value: _sortKey,
-                              items: _sortOptions.map((e) => DropdownMenuItem(
-                                value: e,
-                                child: Text(
-                                  'Sort\n$e',
-                                  style: const TextStyle(fontSize: 12),
-                                ),
-                              )).toList(),
-                              onChanged: (v) => setState(() => _sortKey = v ?? 'Last Name'),
+                              items: _sortOptions
+                                  .map(
+                                    (e) => DropdownMenuItem(
+                                      value: e,
+                                      child: Text(
+                                        'Sort\n$e',
+                                        style: const TextStyle(fontSize: 12),
+                                      ),
+                                    ),
+                                  )
+                                  .toList(),
+                              onChanged: (v) =>
+                                  setState(() => _sortKey = v ?? 'Last Name'),
                             ),
                           ),
                         ),
@@ -128,11 +153,16 @@ class _StudentsScreenState extends State<StudentsScreen> {
                         // Search Field
                         Expanded(
                           child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 8,
+                            ),
                             decoration: BoxDecoration(
                               color: Colors.white,
-                              borderRadius: BorderRadius.circular(8),
-                              border: Border.all(color: const Color(0xFF2E7D32)),
+                              // borderRadius: BorderRadius.circular(8),
+                              border: Border.all(
+                                color: const Color(0xFF2E7D32),
+                              ),
                             ),
                             child: TextField(
                               decoration: const InputDecoration(
@@ -155,11 +185,20 @@ class _StudentsScreenState extends State<StudentsScreen> {
           Expanded(
             child: Consumer<StudentProvider>(
               builder: (context, provider, _) {
+                final classProvider = context.watch<ClassProvider>();
+                final classIdToName = <String, String>{
+                  for (final c in classProvider.classes) c.id: c.class_name,
+                };
                 if (provider.isLoading) {
                   return const Center(child: CircularProgressIndicator());
                 }
                 if (provider.error != null) {
-                  return Center(child: Text('Error: ${provider.error}', style: const TextStyle(color: Colors.red)));
+                  return Center(
+                    child: Text(
+                      'Error: ${provider.error}',
+                      style: const TextStyle(color: Colors.red),
+                    ),
+                  );
                 }
                 final students = _filterAndSort(provider.students);
                 if (students.isEmpty) {
@@ -170,6 +209,11 @@ class _StudentsScreenState extends State<StudentsScreen> {
                   itemCount: students.length,
                   itemBuilder: (context, i) {
                     final s = students[i];
+                    final classNames = s.classCodes.isEmpty
+                        ? const <String>[]
+                        : s.classCodes
+                              .map((id) => classIdToName[id] ?? id)
+                              .toList();
                     return Card(
                       margin: const EdgeInsets.only(bottom: 12),
                       elevation: 2,
@@ -195,7 +239,7 @@ class _StudentsScreenState extends State<StudentsScreen> {
                             ),
                             const SizedBox(height: 2),
                             Text(
-                              'Classes: ${s.classCodes.join(', ')}',
+                              'Classes: ${classNames.isEmpty ? '--' : classNames.join(', ')}',
                               style: const TextStyle(fontSize: 14),
                             ),
                           ],
@@ -232,12 +276,9 @@ class _StudentsScreenState extends State<StudentsScreen> {
         icon: const Icon(Icons.add, color: Colors.white),
         label: const Text(
           'NEW STUDENT',
-          style: TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-          ),
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
       ),
     );
   }
-} 
+}

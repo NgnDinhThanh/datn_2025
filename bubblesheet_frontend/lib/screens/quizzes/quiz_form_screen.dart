@@ -8,7 +8,7 @@ import '../../providers/class_provider.dart';
 import '../../models/exam_model.dart';
 
 class QuizFormScreen extends StatefulWidget {
-  final ExamModel? quiz; // null nếu là tạo mới, có giá trị nếu là sửa
+  final ExamModel? quiz;
 
   const QuizFormScreen({Key? key, this.quiz}) : super(key: key);
 

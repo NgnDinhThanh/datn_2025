@@ -14,11 +14,15 @@ class MyAccountScreen extends StatelessWidget {
       ),
       body: Column(
         children: [
-          // Custom Header
           Container(
-            padding: const EdgeInsets.only(top: 16, bottom: 16, left: 16, right: 16),
+            padding: const EdgeInsets.only(
+              top: 16,
+              bottom: 16,
+              left: 16,
+              right: 16,
+            ),
             decoration: const BoxDecoration(
-              color: Color(0xFF2E7D32), // ZipGrade green
+              color: Color(0xFF2E7D32),
               borderRadius: BorderRadius.vertical(bottom: Radius.circular(20)),
               boxShadow: [
                 BoxShadow(
@@ -30,7 +34,10 @@ class MyAccountScreen extends StatelessWidget {
             ),
             child: SafeArea(
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
@@ -116,7 +123,10 @@ class MyAccountScreen extends StatelessWidget {
                           child: Column(
                             children: [
                               ListTile(
-                                leading: const Icon(Icons.sync, color: Color(0xFF2E7D32)),
+                                leading: const Icon(
+                                  Icons.sync,
+                                  color: Color(0xFF2E7D32),
+                                ),
                                 title: const Text('Sync Now'),
                                 trailing: const Icon(Icons.chevron_right),
                                 onTap: () {
@@ -125,7 +135,10 @@ class MyAccountScreen extends StatelessWidget {
                               ),
                               const Divider(height: 1),
                               ListTile(
-                                leading: const Icon(Icons.settings, color: Color(0xFF2E7D32)),
+                                leading: const Icon(
+                                  Icons.settings,
+                                  color: Color(0xFF2E7D32),
+                                ),
                                 title: const Text('Settings'),
                                 trailing: const Icon(Icons.chevron_right),
                                 onTap: () {
@@ -134,7 +147,10 @@ class MyAccountScreen extends StatelessWidget {
                               ),
                               const Divider(height: 1),
                               ListTile(
-                                leading: const Icon(Icons.help, color: Color(0xFF2E7D32)),
+                                leading: const Icon(
+                                  Icons.help,
+                                  color: Color(0xFF2E7D32),
+                                ),
                                 title: const Text('Help & Support'),
                                 trailing: const Icon(Icons.chevron_right),
                                 onTap: () {
@@ -143,7 +159,10 @@ class MyAccountScreen extends StatelessWidget {
                               ),
                               const Divider(height: 1),
                               ListTile(
-                                leading: const Icon(Icons.info, color: Color(0xFF2E7D32)),
+                                leading: const Icon(
+                                  Icons.info,
+                                  color: Color(0xFF2E7D32),
+                                ),
                                 title: const Text('About'),
                                 trailing: const Icon(Icons.chevron_right),
                                 onTap: () {
@@ -158,16 +177,24 @@ class MyAccountScreen extends StatelessWidget {
                           width: double.infinity,
                           child: ElevatedButton.icon(
                             icon: const Icon(Icons.logout, color: Colors.white),
-                            label: const Text('LOGOUT', style: TextStyle(color: Colors.white)),
+                            label: const Text(
+                              'LOGOUT',
+                              style: TextStyle(color: Colors.white),
+                            ),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.red,
                               padding: const EdgeInsets.symmetric(vertical: 16),
-                              textStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                              textStyle: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                             onPressed: () async {
                               await authProvider.logout();
                               if (context.mounted) {
-                                Navigator.of(context).pushReplacementNamed('/login');
+                                Navigator.of(
+                                  context,
+                                ).pushReplacementNamed('/login');
                               }
                             },
                           ),
@@ -255,13 +282,9 @@ class _SyncDialogState extends State<_SyncDialog> {
         child: _isSyncing
             ? const SizedBox(
                 height: 80,
-                child: Center(
-                  child: CircularProgressIndicator(),
-                ),
+                child: Center(child: CircularProgressIndicator()),
               )
-            : SingleChildScrollView(
-                child: _buildResultContent(),
-              ),
+            : SingleChildScrollView(child: _buildResultContent()),
       ),
       actions: [
         if (!_isSyncing)
@@ -285,7 +308,10 @@ class _SyncDialogState extends State<_SyncDialog> {
         children: [
           Text(
             'Sync failed',
-            style: const TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+            style: const TextStyle(
+              color: Colors.red,
+              fontWeight: FontWeight.bold,
+            ),
           ),
           const SizedBox(height: 8),
           Text(
@@ -313,10 +339,16 @@ class _SyncDialogState extends State<_SyncDialog> {
         _buildRow('Grades cached', _result!.gradesSynced),
         _buildRow('Answer keys cached', _result!.answerKeysSynced),
         const Divider(),
-        _buildRow('Pending results synced', _result!.pendingResultsSynced,
-            failed: _result!.pendingResultsFailed),
-        _buildRow('CRUD operations synced', _result!.crudOperationsSynced,
-            failed: _result!.crudOperationsFailed),
+        _buildRow(
+          'Pending results synced',
+          _result!.pendingResultsSynced,
+          failed: _result!.pendingResultsFailed,
+        ),
+        _buildRow(
+          'CRUD operations synced',
+          _result!.crudOperationsSynced,
+          failed: _result!.crudOperationsFailed,
+        ),
       ],
     );
   }
@@ -330,10 +362,7 @@ class _SyncDialogState extends State<_SyncDialog> {
           Text(label),
           Row(
             children: [
-              Text(
-                '$ok',
-                style: const TextStyle(color: Colors.green),
-              ),
+              Text('$ok', style: const TextStyle(color: Colors.green)),
               if (failed > 0) ...[
                 const SizedBox(width: 4),
                 Text(

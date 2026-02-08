@@ -25,8 +25,8 @@ class _ReviewPapersScreenState extends State<ReviewPapersScreen> {
   List<GradeModel> _grades = [];
   bool _isLoading = true;
   String? _error;
-  int _lastPendingCount = 0; // Track pending count để refresh khi có thay đổi
-  bool _isLoadingGrades = false; // Flag để tránh gọi _loadGrades() nhiều lần cùng lúc
+  int _lastPendingCount = 0;
+  bool _isLoadingGrades = false;
 
   @override
   void initState() {
@@ -38,9 +38,7 @@ class _ReviewPapersScreenState extends State<ReviewPapersScreen> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    // ✅ Update pending count
     final currentPendingCount = _getPendingCount();
-    // ✅ Nếu pending count thay đổi, refresh ngay
     if (currentPendingCount != _lastPendingCount && !_isLoadingGrades) {
       _lastPendingCount = currentPendingCount;
       _loadGrades();
@@ -60,7 +58,8 @@ class _ReviewPapersScreenState extends State<ReviewPapersScreen> {
         final dataRaw = item['data'];
         if (dataRaw == null) return false;
         final data = Map<String, dynamic>.from(dataRaw as Map);
-        final itemQuizId = data['quizId']?.toString() ?? data['quiz_id']?.toString();
+        final itemQuizId =
+            data['quizId']?.toString() ?? data['quiz_id']?.toString();
         return itemQuizId == quizId;
       } catch (e) {
         return false;
@@ -69,12 +68,11 @@ class _ReviewPapersScreenState extends State<ReviewPapersScreen> {
   }
 
   Future<void> _loadGrades() async {
-    // ✅ Tránh gọi nhiều lần cùng lúc
     if (_isLoadingGrades) {
       print('[ReviewPapers] _loadGrades() already in progress, skipping...');
       return;
     }
-    
+
     _isLoadingGrades = true;
     setState(() {
       _isLoading = true;
@@ -89,13 +87,10 @@ class _ReviewPapersScreenState extends State<ReviewPapersScreen> {
     try {
       final cachedGrades = GradeCacheService.getCachedGradesForQuiz(quizId);
       final allGrades = <GradeModel>[];
-      
-      // Thêm cached grades
+
       if (cachedGrades != null && cachedGrades.isNotEmpty) {
         allGrades.addAll(cachedGrades);
       }
-
-      // ✅ Lấy pending results và convert thành GradeModel
       final pendingResults = GradingResultQueueService.getPendingResults();
       print('[ReviewPapers] Total pending results: ${pendingResults.length}');
       final pendingForQuiz = pendingResults.where((item) {
@@ -110,9 +105,10 @@ class _ReviewPapersScreenState extends State<ReviewPapersScreen> {
           return false;
         }
       }).toList();
-      print('[ReviewPapers] Pending results for quiz $quizId: ${pendingForQuiz.length}');
+      print(
+        '[ReviewPapers] Pending results for quiz $quizId: ${pendingForQuiz.length}',
+      );
 
-      // Convert pending results thành GradeModel
       int mergedCount = 0;
       int skippedCount = 0;
       for (var pendingItem in pendingForQuiz) {
@@ -120,54 +116,95 @@ class _ReviewPapersScreenState extends State<ReviewPapersScreen> {
           final dataRaw = pendingItem['data'];
           if (dataRaw == null) continue;
           final data = Map<String, dynamic>.from(dataRaw as Map);
-          
-          // ✅ Normalize values để so sánh đúng (null -> empty string)
-          final studentId = (data['studentId']?.toString() ?? data['student_id']?.toString() ?? '').trim();
-          final classId = (data['classId']?.toString() ?? data['class_id']?.toString() ?? '').trim();
-          final versionCode = (data['versionCode']?.toString() ?? data['version_code']?.toString() ?? '').trim();
-          
-          // ✅ Check duplicate với normalized values
+
+          final studentId =
+              (data['studentId']?.toString() ??
+                      data['student_id']?.toString() ??
+                      '')
+                  .trim();
+          final classId =
+              (data['classId']?.toString() ??
+                      data['class_id']?.toString() ??
+                      '')
+                  .trim();
+          final versionCode =
+              (data['versionCode']?.toString() ??
+                      data['version_code']?.toString() ??
+                      '')
+                  .trim();
+
           final alreadyExists = allGrades.any((g) {
             final gStudentId = (g.studentId ?? '').trim();
             final gClassCode = (g.classCode ?? '').trim();
             final gVersionCode = (g.versionCode ?? '').trim();
-            
-            return gStudentId == studentId && 
-                   gClassCode == classId &&
-                   gVersionCode == versionCode;
+
+            return gStudentId == studentId &&
+                gClassCode == classId &&
+                gVersionCode == versionCode;
           });
-          
+
           if (!alreadyExists) {
-            // Tạo GradeModel từ pending result
-            allGrades.add(GradeModel(
-              id: pendingItem['id']?.toString() ?? 'pending_${DateTime.now().millisecondsSinceEpoch}',
-              classCode: classId.isEmpty ? '' : classId,
-              examId: quizId,
-              studentId: studentId.isEmpty ? '' : studentId,
-              score: data['score'] != null ? (data['score'] is int ? data['score'].toDouble() : data['score']) : null,
-              percentage: data['percentage'] != null ? (data['percentage'] is int ? data['percentage'].toDouble() : data['percentage']) : null,
-              answers: data['answers'] is Map ? Map<String, dynamic>.from(data['answers']) : {},
-              scannedImage: data['scannedImage']?.toString() ?? data['scanned_image']?.toString(),
-              annotatedImage: data['annotatedImage']?.toString() ?? data['annotated_image']?.toString(),
-              scannedAt: data['scannedAt'] != null ? DateTime.tryParse(data['scannedAt'].toString()) : 
-                        (data['scanned_at'] != null ? DateTime.tryParse(data['scanned_at'].toString()) : DateTime.now()),
-              versionCode: versionCode.isEmpty ? null : versionCode,
-              answersheetId: data['answersheetId']?.toString() ?? data['answersheet_id']?.toString(),
-            ));
+            allGrades.add(
+              GradeModel(
+                id:
+                    pendingItem['id']?.toString() ??
+                    'pending_${DateTime.now().millisecondsSinceEpoch}',
+                classCode: classId.isEmpty ? '' : classId,
+                examId: quizId,
+                studentId: studentId.isEmpty ? '' : studentId,
+                score: data['score'] != null
+                    ? (data['score'] is int
+                          ? data['score'].toDouble()
+                          : data['score'])
+                    : null,
+                percentage: data['percentage'] != null
+                    ? (data['percentage'] is int
+                          ? data['percentage'].toDouble()
+                          : data['percentage'])
+                    : null,
+                answers: data['answers'] is Map
+                    ? Map<String, dynamic>.from(data['answers'])
+                    : {},
+                scannedImage:
+                    data['scannedImage']?.toString() ??
+                    data['scanned_image']?.toString(),
+                annotatedImage:
+                    data['annotatedImage']?.toString() ??
+                    data['annotated_image']?.toString(),
+                scannedAt: data['scannedAt'] != null
+                    ? DateTime.tryParse(data['scannedAt'].toString())
+                    : (data['scanned_at'] != null
+                          ? DateTime.tryParse(data['scanned_at'].toString())
+                          : DateTime.now()),
+                versionCode: versionCode.isEmpty ? null : versionCode,
+                answersheetId:
+                    data['answersheetId']?.toString() ??
+                    data['answersheet_id']?.toString(),
+              ),
+            );
             mergedCount++;
-            print('[ReviewPapers] Merged pending result: studentId=$studentId, classId=$classId, versionCode=$versionCode');
+            print(
+              '[ReviewPapers] Merged pending result: studentId=$studentId, classId=$classId, versionCode=$versionCode',
+            );
           } else {
             skippedCount++;
-            print('[ReviewPapers] Skipped duplicate pending result: studentId=$studentId, classId=$classId, versionCode=$versionCode');
+            print(
+              '[ReviewPapers] Skipped duplicate pending result: studentId=$studentId, classId=$classId, versionCode=$versionCode',
+            );
           }
         } catch (e) {
-          print('[ReviewPapers] Error converting pending result to GradeModel: $e');
+          print(
+            '[ReviewPapers] Error converting pending result to GradeModel: $e',
+          );
         }
       }
-      print('[ReviewPapers] Merge summary: merged=$mergedCount, skipped=$skippedCount');
+      print(
+        '[ReviewPapers] Merge summary: merged=$mergedCount, skipped=$skippedCount',
+      );
 
-      // ✅ Luôn set grades (dù empty hay không) và set loading = false
-      print('[ReviewPapers] Total grades after merge (offline): ${allGrades.length} (cached: ${cachedGrades?.length ?? 0}, pending: ${pendingForQuiz.length})');
+      print(
+        '[ReviewPapers] Total grades after merge (offline): ${allGrades.length} (cached: ${cachedGrades?.length ?? 0}, pending: ${pendingForQuiz.length})',
+      );
       if (mounted) {
         setState(() {
           _grades = allGrades;
@@ -176,7 +213,6 @@ class _ReviewPapersScreenState extends State<ReviewPapersScreen> {
       }
     } catch (e) {
       print('[ReviewPapers] Error loading cached grades: $e');
-      // ✅ Vẫn set loading = false khi có lỗi
       if (mounted) {
         setState(() {
           _isLoading = false;
@@ -194,11 +230,9 @@ class _ReviewPapersScreenState extends State<ReviewPapersScreen> {
           final grades = await GradingService.getGradesForQuiz(quizId, token);
           await GradeCacheService.cacheGradesForQuiz(quizId, grades);
 
-          // ✅ Merge với pending results sau khi fetch từ API
           final allGradesFromApi = <GradeModel>[];
           allGradesFromApi.addAll(grades);
 
-          // Lấy pending results và merge vào
           final pendingResults = GradingResultQueueService.getPendingResults();
           final pendingForQuiz = pendingResults.where((item) {
             try {
@@ -213,7 +247,6 @@ class _ReviewPapersScreenState extends State<ReviewPapersScreen> {
             }
           }).toList();
 
-          // Convert pending results thành GradeModel và merge
           int mergedCount = 0;
           int skippedCount = 0;
           for (var pendingItem in pendingForQuiz) {
@@ -221,55 +254,98 @@ class _ReviewPapersScreenState extends State<ReviewPapersScreen> {
               final dataRaw = pendingItem['data'];
               if (dataRaw == null) continue;
               final data = Map<String, dynamic>.from(dataRaw as Map);
-              
-              // ✅ Normalize values để so sánh đúng (null -> empty string)
-              final studentId = (data['studentId']?.toString() ?? data['student_id']?.toString() ?? '').trim();
-              final classId = (data['classId']?.toString() ?? data['class_id']?.toString() ?? '').trim();
-              final versionCode = (data['versionCode']?.toString() ?? data['version_code']?.toString() ?? '').trim();
-              
-              // ✅ Check duplicate với normalized values
+
+              final studentId =
+                  (data['studentId']?.toString() ??
+                          data['student_id']?.toString() ??
+                          '')
+                      .trim();
+              final classId =
+                  (data['classId']?.toString() ??
+                          data['class_id']?.toString() ??
+                          '')
+                      .trim();
+              final versionCode =
+                  (data['versionCode']?.toString() ??
+                          data['version_code']?.toString() ??
+                          '')
+                      .trim();
+
               final alreadyExists = allGradesFromApi.any((g) {
                 final gStudentId = (g.studentId ?? '').trim();
                 final gClassCode = (g.classCode ?? '').trim();
                 final gVersionCode = (g.versionCode ?? '').trim();
-                
-                return gStudentId == studentId && 
-                       gClassCode == classId &&
-                       gVersionCode == versionCode;
+
+                return gStudentId == studentId &&
+                    gClassCode == classId &&
+                    gVersionCode == versionCode;
               });
-              
+
               if (!alreadyExists) {
-                allGradesFromApi.add(GradeModel(
-                  id: pendingItem['id']?.toString() ?? 'pending_${DateTime.now().millisecondsSinceEpoch}',
-                  classCode: classId.isEmpty ? '' : classId,
-                  examId: quizId,
-                  studentId: studentId.isEmpty ? '' : studentId,
-                  score: data['score'] != null ? (data['score'] is int ? data['score'].toDouble() : data['score']) : null,
-                  percentage: data['percentage'] != null ? (data['percentage'] is int ? data['percentage'].toDouble() : data['percentage']) : null,
-                  answers: data['answers'] is Map ? Map<String, dynamic>.from(data['answers']) : {},
-                  scannedImage: data['scannedImage']?.toString() ?? data['scanned_image']?.toString(),
-                  annotatedImage: data['annotatedImage']?.toString() ?? data['annotated_image']?.toString(),
-                  scannedAt: data['scannedAt'] != null ? DateTime.tryParse(data['scannedAt'].toString()) : 
-                            (data['scanned_at'] != null ? DateTime.tryParse(data['scanned_at'].toString()) : DateTime.now()),
-                  versionCode: versionCode.isEmpty ? null : versionCode,
-                  answersheetId: data['answersheetId']?.toString() ?? data['answersheet_id']?.toString(),
-                ));
+                allGradesFromApi.add(
+                  GradeModel(
+                    id:
+                        pendingItem['id']?.toString() ??
+                        'pending_${DateTime.now().millisecondsSinceEpoch}',
+                    classCode: classId.isEmpty ? '' : classId,
+                    examId: quizId,
+                    studentId: studentId.isEmpty ? '' : studentId,
+                    score: data['score'] != null
+                        ? (data['score'] is int
+                              ? data['score'].toDouble()
+                              : data['score'])
+                        : null,
+                    percentage: data['percentage'] != null
+                        ? (data['percentage'] is int
+                              ? data['percentage'].toDouble()
+                              : data['percentage'])
+                        : null,
+                    answers: data['answers'] is Map
+                        ? Map<String, dynamic>.from(data['answers'])
+                        : {},
+                    scannedImage:
+                        data['scannedImage']?.toString() ??
+                        data['scanned_image']?.toString(),
+                    annotatedImage:
+                        data['annotatedImage']?.toString() ??
+                        data['annotated_image']?.toString(),
+                    scannedAt: data['scannedAt'] != null
+                        ? DateTime.tryParse(data['scannedAt'].toString())
+                        : (data['scanned_at'] != null
+                              ? DateTime.tryParse(data['scanned_at'].toString())
+                              : DateTime.now()),
+                    versionCode: versionCode.isEmpty ? null : versionCode,
+                    answersheetId:
+                        data['answersheetId']?.toString() ??
+                        data['answersheet_id']?.toString(),
+                  ),
+                );
                 mergedCount++;
-                print('[ReviewPapers] Merged pending result (online): studentId=$studentId, classId=$classId, versionCode=$versionCode');
+                print(
+                  '[ReviewPapers] Merged pending result (online): studentId=$studentId, classId=$classId, versionCode=$versionCode',
+                );
               } else {
                 skippedCount++;
-                print('[ReviewPapers] Skipped duplicate pending result (online): studentId=$studentId, classId=$classId, versionCode=$versionCode');
+                print(
+                  '[ReviewPapers] Skipped duplicate pending result (online): studentId=$studentId, classId=$classId, versionCode=$versionCode',
+                );
               }
             } catch (e) {
-              print('[ReviewPapers] Error converting pending result to GradeModel: $e');
+              print(
+                '[ReviewPapers] Error converting pending result to GradeModel: $e',
+              );
             }
           }
-          print('[ReviewPapers] Merge summary (online): merged=$mergedCount, skipped=$skippedCount');
+          print(
+            '[ReviewPapers] Merge summary (online): merged=$mergedCount, skipped=$skippedCount',
+          );
 
-          print('[ReviewPapers] Total grades after merge (online): ${allGradesFromApi.length} (from API: ${grades.length}, pending: ${pendingForQuiz.length})');
+          print(
+            '[ReviewPapers] Total grades after merge (online): ${allGradesFromApi.length} (from API: ${grades.length}, pending: ${pendingForQuiz.length})',
+          );
           if (mounted) {
             setState(() {
-              _grades = allGradesFromApi; // ✅ Dùng merged grades
+              _grades = allGradesFromApi;
               _isLoading = false;
             });
           }
@@ -311,14 +387,12 @@ class _ReviewPapersScreenState extends State<ReviewPapersScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // ✅ Check và refresh khi có pending results mới (khi quay lại screen)
-    // Chỉ check một lần mỗi frame để tránh refresh quá nhiều
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted || _isLoadingGrades) return;
       final pendingCount = _getPendingCount();
       if (pendingCount != _lastPendingCount) {
         _lastPendingCount = pendingCount;
-        _loadGrades(); // Refresh để hiển thị papers mới
+        _loadGrades();
       }
     });
 

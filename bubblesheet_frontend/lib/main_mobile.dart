@@ -6,7 +6,6 @@ import 'package:bubblesheet_frontend/providers/student_provider.dart';
 import 'package:bubblesheet_frontend/providers/answer_sheet_provider.dart';
 import 'package:bubblesheet_frontend/providers/answer_sheet_form_provider.dart';
 import 'package:bubblesheet_frontend/providers/scanning_provider.dart';
-import 'package:bubblesheet_frontend/services/api_service.dart';
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:hive_flutter/adapters.dart';
@@ -14,7 +13,7 @@ import 'package:provider/provider.dart';
 import 'mobile/main_screen.dart';
 import 'mobile/login_screen.dart';
 
-void main() async{
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Hive.initFlutter();
   await Hive.openBox("answer_keys_cache");
@@ -28,23 +27,21 @@ void main() async{
   await Hive.openBox('answer_sheets_cache');
   await Hive.openBox('answer_sheet_templates_cache');
 
-
-  // Debug: Log API baseUrl khi app khởi động
-  ApiService.logBaseUrl();
-  
-  runApp(MultiProvider(
-    providers: [
-      ChangeNotifierProvider(create: (_) => AuthProvider()),
-      ChangeNotifierProvider(create: (_) => ClassProvider()),
-      ChangeNotifierProvider(create: (_) => StudentProvider()),
-      ChangeNotifierProvider(create: (_) => AnswerSheetProvider()),
-      ChangeNotifierProvider(create: (_) => AnswerSheetFormProvider()),
-      ChangeNotifierProvider(create: (_) => ExamProvider()),
-      ChangeNotifierProvider(create: (_) => AnswerKeyProvider()),
-      ChangeNotifierProvider(create: (_) => ScanningProvider()),
-    ],
-    child: const BubbleSheetMobileApp(),
-  ));
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => AuthProvider()),
+        ChangeNotifierProvider(create: (_) => ClassProvider()),
+        ChangeNotifierProvider(create: (_) => StudentProvider()),
+        ChangeNotifierProvider(create: (_) => AnswerSheetProvider()),
+        ChangeNotifierProvider(create: (_) => AnswerSheetFormProvider()),
+        ChangeNotifierProvider(create: (_) => ExamProvider()),
+        ChangeNotifierProvider(create: (_) => AnswerKeyProvider()),
+        ChangeNotifierProvider(create: (_) => ScanningProvider()),
+      ],
+      child: const BubbleSheetMobileApp(),
+    ),
+  );
 }
 
 class BubbleSheetMobileApp extends StatelessWidget {
@@ -67,11 +64,11 @@ class BubbleSheetMobileApp extends StatelessWidget {
               body: Center(child: CircularProgressIndicator()),
             );
           }
-          
+
           if (authProvider.currentUser == null) {
             return const LoginScreen();
           }
-          
+
           return const MainScreen();
         },
       ),
